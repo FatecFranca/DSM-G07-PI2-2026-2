@@ -1,0 +1,389 @@
+<mxfile host="app.diagrams.net" agent="Gemini Notebook" pages="8">
+  <diagram id="page_overview" name="0. Visão Geral (CSU01 a CSU07)">
+    <mxGraphModel dx="2174" dy="901" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1200" pageHeight="900" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sys0" parent="1" style="shape=swimlane;whiteSpace=wrap;html=1;startSize=30;horizontal=1;fillColor=#F8FAFC;fontColor=#0F172A;strokeColor=#475569;strokeWidth=2;fontStyle=1;fontSize=13;rounded=1;collapsible=0;" value="Sistema Web para Gestão de Assistência Técnica de TI&lt;div&gt;Tech Manager&lt;/div&gt;" vertex="1">
+          <mxGeometry height="750" width="680" x="260" y="100" as="geometry" />
+        </mxCell>
+        <mxCell id="csu01" parent="sys0" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="CSU01: Cadastrar Ordem de Serviço (RF001)" vertex="1">
+          <mxGeometry height="70" width="240" x="60" y="50" as="geometry" />
+        </mxCell>
+        <mxCell id="csu02" parent="sys0" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="CSU02: Agendar Visita Técnica (RF002)" vertex="1">
+          <mxGeometry height="70" width="240" x="60" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="csu03" parent="sys0" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="CSU03: Confirmar Orçamento (RF003)" vertex="1">
+          <mxGeometry height="70" width="240" x="60" y="310" as="geometry" />
+        </mxCell>
+        <mxCell id="csu04" parent="sys0" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="CSU04: Exibir Panorama de Trabalho (RF004)" vertex="1">
+          <mxGeometry height="70" width="240" x="380" y="190" as="geometry" />
+        </mxCell>
+        <mxCell id="csu05" parent="sys0" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="CSU05: Cadastrar Usuários (RF005)" vertex="1">
+          <mxGeometry height="70" width="240" x="60" y="520" as="geometry" />
+        </mxCell>
+        <mxCell id="csu06" parent="sys0" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="CSU06: Gerar Relatórios e Indicadores (RF006)" vertex="1">
+          <mxGeometry height="70" width="240" x="380" y="620" as="geometry" />
+        </mxCell>
+        <mxCell id="csu07" parent="sys0" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="CSU07: Gerenciar Ordens de Serviço (RF007)" vertex="1">
+          <mxGeometry height="70" width="240" x="380" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_csu2_csu3" edge="1" parent="sys0" source="csu02" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;" target="csu03" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_cli" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#DBEAFE;strokeColor=#2563EB;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;" value="Cliente (Ator Primário)" vertex="1">
+          <mxGeometry height="90" width="60" x="50" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="tPVhMUSySWuAUheNS5yx-1" edge="1" parent="1" source="actor_tec" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;defaultLabelBackgroundColor=gap;" target="csu06">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="tPVhMUSySWuAUheNS5yx-2" edge="1" parent="1" source="actor_tec" style="rounded=0;orthogonalLoop=1;jettySize=auto;html=1;entryX=1;entryY=0;entryDx=0;entryDy=0;defaultLabelBackgroundColor=gap;" target="csu05">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="actor_tec" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;" value="Técnico (Ator Primário)" vertex="1">
+          <mxGeometry height="90" width="60" x="1040" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="a1" edge="1" parent="1" source="actor_cli" style="endArrow=none;html=1;rounded=0;strokeColor=#334155;strokeWidth=2;" target="csu02">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a2" edge="1" parent="1" source="actor_cli" style="endArrow=none;html=1;rounded=0;strokeColor=#334155;strokeWidth=2;" target="csu03">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a3" edge="1" parent="1" source="actor_cli" style="endArrow=none;html=1;rounded=0;strokeColor=#334155;strokeWidth=2;" target="csu05">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a4" edge="1" parent="1" source="actor_tec" style="endArrow=none;html=1;rounded=0;strokeColor=#334155;strokeWidth=2;" target="csu01">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a5" edge="1" parent="1" source="actor_tec" style="endArrow=none;html=1;rounded=0;strokeColor=#334155;strokeWidth=2;" target="csu04">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="a6" edge="1" parent="1" source="actor_tec" style="endArrow=none;html=1;rounded=0;strokeColor=#334155;strokeWidth=2;" target="csu07">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page_csu01" name="CSU01 - Cadastrar Ordem de Serviço">
+    <mxGraphModel dx="1500" dy="622" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sys_box" parent="1" style="shape=swimlane;whiteSpace=wrap;html=1;startSize=28;horizontal=1;fillColor=#F8FAFC;fontColor=#0F172A;strokeColor=#475569;strokeWidth=2;fontStyle=1;fontSize=12;rounded=1;collapsible=0;" value="Tech Manager — CSU01" vertex="1">
+          <mxGeometry height="560" width="640" x="150" y="80" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_main" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#0284C7;strokeColor=#0369A1;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#FFFFFF;align=center;verticalAlign=middle;shadow=1;" value="CSU01: Cadastrar Ordem de Serviço" vertex="1">
+          <mxGeometry height="80" width="240" x="160" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_0" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Validar Vínculo Cliente e Equipamento (RN01)" vertex="1">
+          <mxGeometry height="65" width="210" x="420" y="30" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inc_0" edge="1" parent="sys_box" source="uc_main" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="inc_0" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_1" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Registrar Descrição Física de Entrada (RN05)" vertex="1">
+          <mxGeometry height="65" width="210" x="410" y="105" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inc_1" edge="1" parent="sys_box" source="uc_main" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;entryX=0;entryY=1;entryDx=0;entryDy=0;" target="inc_1" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_2" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Gravar OS com Status &#39;Aberta&#39; e Gerar ID (RN02)" vertex="1">
+          <mxGeometry height="65" width="210" x="420" y="180" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inc_2" edge="1" parent="sys_box" source="uc_main" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;entryX=0;entryY=0.5;entryDx=0;entryDy=0;" target="inc_2" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_0" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Redirecionar para Cadastro de Usuário / Equipamento (Alt 1)" vertex="1">
+          <mxGeometry height="65" width="220" x="10" y="360" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ext_0" edge="1" parent="sys_box" source="ext_0" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#B91C1C;" target="uc_main" value="«extend»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_1" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Destacar e Solicitar Preenchimento de Campos Obrigatórios (Alt 2)" vertex="1">
+          <mxGeometry height="65" width="220" x="10" y="485" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ext_1" edge="1" parent="sys_box" source="ext_1" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#B91C1C;exitX=1;exitY=0;exitDx=0;exitDy=0;" target="uc_main" value="«extend»">
+          <mxGeometry relative="1" x="-0.4437" y="3" as="geometry">
+            <mxPoint as="offset" />
+          </mxGeometry>
+        </mxCell>
+        <mxCell id="main_actor" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;" value="Técnico (Ator Primário)" vertex="1">
+          <mxGeometry height="90" width="60" x="50" y="285" as="geometry" />
+        </mxCell>
+        <mxCell id="sec_actor" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#DBEAFE;strokeColor=#2563EB;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;" value="Cliente (Ator Secundário)" vertex="1">
+          <mxGeometry height="90" width="60" x="860" y="280" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_m_act" edge="1" parent="1" source="main_actor" style="endArrow=none;html=1;rounded=0;strokeColor=#1E293B;strokeWidth=2;" target="uc_main">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_s_act" edge="1" parent="1" source="sec_actor" style="endArrow=none;html=1;rounded=0;strokeColor=#1E293B;strokeWidth=2;" target="uc_main">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page_csu02" name="CSU02 - Agendar Visita Técnica">
+    <mxGraphModel dx="1500" dy="622" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sys_box" parent="1" style="shape=swimlane;whiteSpace=wrap;html=1;startSize=28;horizontal=1;fillColor=#F8FAFC;fontColor=#0F172A;strokeColor=#475569;strokeWidth=2;fontStyle=1;fontSize=12;rounded=1;collapsible=0;" value="Tech Manager— CSU02" vertex="1">
+          <mxGeometry height="545" width="560" x="230" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_main" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#0284C7;strokeColor=#0369A1;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#FFFFFF;align=center;verticalAlign=middle;shadow=1;" value="CSU02: Agendar Visita Técnica" vertex="1">
+          <mxGeometry height="80" width="240" x="40" y="210" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_0" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Informar Endereço, Coleta e Descrição do Defeito" vertex="1">
+          <mxGeometry height="65" width="210" x="340" y="57" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inc_0" edge="1" parent="sys_box" source="uc_main" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;" target="inc_0" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_1" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Verificar Disponibilidade de Agenda Sem Conflito (RN03)" vertex="1">
+          <mxGeometry height="65" width="210" x="340" y="155" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inc_1" edge="1" parent="sys_box" source="uc_main" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;" target="inc_1" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_2" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Acionar Confirmação e Registro do Agendamento (CSU03)" vertex="1">
+          <mxGeometry height="65" width="210" x="340" y="253" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inc_2" edge="1" parent="sys_box" source="uc_main" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;" target="inc_2" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_0" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Orientar Entrega Presencial - CEP Fora de Cobertura (Alt 1)" vertex="1">
+          <mxGeometry height="65" width="220" x="20" y="445" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ext_0" edge="1" parent="sys_box" source="ext_0" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#B91C1C;" target="uc_main" value="«extend»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="main_actor" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#DBEAFE;strokeColor=#2563EB;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;" value="Cliente (Ator Primário)" vertex="1">
+          <mxGeometry height="90" width="60" x="50" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="sec_actor" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;" value="Técnico (Ator Secundário)" vertex="1">
+          <mxGeometry height="90" width="60" x="860" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_m_act" edge="1" parent="1" source="main_actor" style="endArrow=none;html=1;rounded=0;strokeColor=#1E293B;strokeWidth=2;" target="uc_main">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_s_act" edge="1" parent="1" source="sec_actor" style="endArrow=none;html=1;rounded=0;strokeColor=#1E293B;strokeWidth=2;" target="uc_main">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page_csu03" name="CSU03 - Confirmar Agendamento">
+    <mxGraphModel dx="1705" dy="707" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sys_box" parent="1" style="shape=swimlane;whiteSpace=wrap;html=1;startSize=28;horizontal=1;fillColor=#F8FAFC;fontColor=#0F172A;strokeColor=#475569;strokeWidth=2;fontStyle=1;fontSize=12;rounded=1;collapsible=0;" value="Tech Manager&amp;nbsp;— CSU03" vertex="1">
+          <mxGeometry height="580" width="560" x="220" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_main" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#0284C7;strokeColor=#0369A1;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#FFFFFF;align=center;verticalAlign=middle;shadow=1;" value="CSU03: Confirmar Agendamento" vertex="1">
+          <mxGeometry height="80" width="240" x="100" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_0" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Consultar Detalhes do Pré-Orçamento Gerado" vertex="1">
+          <mxGeometry height="65" width="210" x="180" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inc_0" edge="1" parent="sys_box" source="uc_main" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;" target="inc_0" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_1" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Registrar Aprovação do Cliente e Atualizar Status da OS (RN02)" vertex="1">
+          <mxGeometry height="65" width="210" x="320" y="125" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inc_1" edge="1" parent="sys_box" source="uc_main" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;" target="inc_1" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_0" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Cancelar Solicitação e Liberar Horário do Técnico (Alt 1)" vertex="1">
+          <mxGeometry height="65" width="220" x="40" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ext_0" edge="1" parent="sys_box" source="ext_0" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#B91C1C;" target="uc_main" value="«extend»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="main_actor" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#DBEAFE;strokeColor=#2563EB;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;" value="Cliente (Ator Primário)" vertex="1">
+          <mxGeometry height="90" width="60" x="50" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="sec_actor" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FCE7F3;strokeColor=#DB2777;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;" value="Atendente / Sistema (Ator Secundário)" vertex="1">
+          <mxGeometry height="90" width="60" x="860" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_m_act" edge="1" parent="1" source="main_actor" style="endArrow=none;html=1;rounded=0;strokeColor=#1E293B;strokeWidth=2;" target="uc_main">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_s_act" edge="1" parent="1" source="sec_actor" style="endArrow=none;html=1;rounded=0;strokeColor=#1E293B;strokeWidth=2;" target="uc_main">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page_csu04" name="CSU04 - Exibir Panorama de Trabalho">
+    <mxGraphModel dx="1705" dy="707" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sys_box" parent="1" style="shape=swimlane;whiteSpace=wrap;html=1;startSize=28;horizontal=1;fillColor=#F8FAFC;fontColor=#0F172A;strokeColor=#475569;strokeWidth=2;fontStyle=1;fontSize=12;rounded=1;collapsible=0;" value="Tech Manager&amp;nbsp;— CSU04" vertex="1">
+          <mxGeometry height="580" width="610" x="220" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_main" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#0284C7;strokeColor=#0369A1;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#FFFFFF;align=center;verticalAlign=middle;shadow=1;" value="CSU04: Exibir Panorama de Trabalho" vertex="1">
+          <mxGeometry height="80" width="240" x="160" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_0" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Filtrar OS Não Finalizadas do Dia" vertex="1">
+          <mxGeometry height="65" width="210" x="320" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inc_0" edge="1" parent="sys_box" source="uc_main" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;" target="inc_0" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_1" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Ordenar Atendimentos por Ordem Cronológica (RN04)" vertex="1">
+          <mxGeometry height="65" width="210" x="390" y="145" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inc_1" edge="1" parent="sys_box" source="uc_main" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;" target="inc_1" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_0" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Exibir Mensagem de Agenda Livre (Sem Pendências do Dia)" vertex="1">
+          <mxGeometry height="65" width="220" x="40" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ext_0" edge="1" parent="sys_box" source="ext_0" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#B91C1C;" target="uc_main" value="«extend»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="main_actor" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;" value="Técnico (Ator Primário)" vertex="1">
+          <mxGeometry height="90" width="60" x="120" y="290" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_m_act" edge="1" parent="1" source="main_actor" style="endArrow=none;html=1;rounded=0;strokeColor=#1E293B;strokeWidth=2;" target="uc_main">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page_csu05" name="CSU05 - Cadastrar Usuários">
+    <mxGraphModel dx="1705" dy="707" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sys_box" parent="1" style="shape=swimlane;whiteSpace=wrap;html=1;startSize=28;horizontal=1;fillColor=#F8FAFC;fontColor=#0F172A;strokeColor=#475569;strokeWidth=2;fontStyle=1;fontSize=12;rounded=1;collapsible=0;" value="Tech Manager — CSU05" vertex="1">
+          <mxGeometry height="580" width="620" x="220" y="65" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_main" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#0284C7;strokeColor=#0369A1;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#FFFFFF;align=center;verticalAlign=middle;shadow=1;" value="CSU05: Cadastrar Usuários" vertex="1">
+          <mxGeometry height="80" width="240" x="160" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_0" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Validar Campos Obrigatórios e Formato de E-mail" vertex="1">
+          <mxGeometry height="65" width="210" x="320" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inc_0" edge="1" parent="sys_box" source="uc_main" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;" target="inc_0" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_1" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Criptografar Senha e Definir Perfil de Acesso (RNF002)" vertex="1">
+          <mxGeometry height="65" width="210" x="390" y="145" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inc_1" edge="1" parent="sys_box" source="uc_main" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;" target="inc_1" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_0" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Notificar E-mail Já Cadastrado e Destacar Campo (Alt 1)" vertex="1">
+          <mxGeometry height="65" width="220" x="40" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ext_0" edge="1" parent="sys_box" source="ext_0" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#B91C1C;" target="uc_main" value="«extend»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="main_actor" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0E7FF;strokeColor=#4F46E5;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;" value="Técnico (Ator Primário)" vertex="1">
+          <mxGeometry height="90" width="60" x="100" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="sec_actor" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#DBEAFE;strokeColor=#2563EB;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;" value="Cliente / Usuário (Ator Secundário)" vertex="1">
+          <mxGeometry height="90" width="60" x="910" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_m_act" edge="1" parent="1" source="main_actor" style="endArrow=none;html=1;rounded=0;strokeColor=#1E293B;strokeWidth=2;" target="uc_main">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_s_act" edge="1" parent="1" source="sec_actor" style="endArrow=none;html=1;rounded=0;strokeColor=#1E293B;strokeWidth=2;" target="uc_main">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page_csu06" name="CSU06 - Gerar Relatórios e Indicadores">
+    <mxGraphModel dx="1807" dy="749" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sys_box" parent="1" style="shape=swimlane;whiteSpace=wrap;html=1;startSize=28;horizontal=1;fillColor=#F8FAFC;fontColor=#0F172A;strokeColor=#475569;strokeWidth=2;fontStyle=1;fontSize=12;rounded=1;collapsible=0;" value="Tech Manager&amp;nbsp;— CSU06" vertex="1">
+          <mxGeometry height="580" width="620" x="170" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_main" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#0284C7;strokeColor=#0369A1;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#FFFFFF;align=center;verticalAlign=middle;shadow=1;" value="CSU06: Gerar Relatórios e Indicadores" vertex="1">
+          <mxGeometry height="80" width="240" x="160" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_0" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Aplicar Filtros de Período, Técnico e Status" vertex="1">
+          <mxGeometry height="65" width="210" x="360" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inc_0" edge="1" parent="sys_box" source="uc_main" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;" target="inc_0" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_1" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Calcular Métricas de OS e Tempo Médio de Atendimento" vertex="1">
+          <mxGeometry height="65" width="210" x="400" y="145" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inc_1" edge="1" parent="sys_box" source="uc_main" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;" target="inc_1" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_0" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Exportar Dashboard em Formato PDF / CSV" vertex="1">
+          <mxGeometry height="65" width="220" x="40" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ext_0" edge="1" parent="sys_box" source="ext_0" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#B91C1C;" target="uc_main" value="«extend»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_1" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Exibir Alerta de Ausência de Dados no Período Selecionado" vertex="1">
+          <mxGeometry height="65" width="220" x="170" y="480" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ext_1" edge="1" parent="sys_box" source="ext_1" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#B91C1C;" target="uc_main" value="«extend»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="main_actor" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#E0E7FF;strokeColor=#4F46E5;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;" value="Técnico (Ator Primário)" vertex="1">
+          <mxGeometry height="90" width="60" x="50" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_m_act" edge="1" parent="1" source="main_actor" style="endArrow=none;html=1;rounded=0;strokeColor=#1E293B;strokeWidth=2;" target="uc_main">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+  <diagram id="page_csu07" name="CSU07 - Gerenciar Ordens de Serviço">
+    <mxGraphModel dx="1705" dy="707" grid="1" gridSize="10" guides="1" tooltips="1" connect="1" arrows="1" fold="1" page="1" pageScale="1" pageWidth="1000" pageHeight="700" math="0" shadow="0">
+      <root>
+        <mxCell id="0" />
+        <mxCell id="1" parent="0" />
+        <mxCell id="sys_box" parent="1" style="shape=swimlane;whiteSpace=wrap;html=1;startSize=28;horizontal=1;fillColor=#F8FAFC;fontColor=#0F172A;strokeColor=#475569;strokeWidth=2;fontStyle=1;fontSize=12;rounded=1;collapsible=0;" value="Tech Manager&amp;nbsp;— CSU07" vertex="1">
+          <mxGeometry height="580" width="660" x="160" y="60" as="geometry" />
+        </mxCell>
+        <mxCell id="uc_main" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#0284C7;strokeColor=#0369A1;strokeWidth=2;fontSize=12;fontStyle=1;fontColor=#FFFFFF;align=center;verticalAlign=middle;shadow=1;" value="CSU07: Gerenciar Ordens de Serviço" vertex="1">
+          <mxGeometry height="80" width="240" x="160" y="230" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_0" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Alterar Status da OS (RN02)" vertex="1">
+          <mxGeometry height="65" width="210" x="320" y="40" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inc_0" edge="1" parent="sys_box" source="uc_main" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;" target="inc_0" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_1" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Registrar Descrição Física de Saída / Devolução (RN05)" vertex="1">
+          <mxGeometry height="65" width="210" x="430" y="120" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inc_1" edge="1" parent="sys_box" source="uc_main" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;" target="inc_1" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="inc_2" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#E0F2FE;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Validar Conclusão do Serviço para Encerramento (RN06)" vertex="1">
+          <mxGeometry height="65" width="210" x="440" y="200" as="geometry" />
+        </mxCell>
+        <mxCell id="e_inc_2" edge="1" parent="sys_box" source="uc_main" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#0284C7;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0369A1;" target="inc_2" value="«include»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="ext_0" parent="sys_box" style="ellipse;whiteSpace=wrap;html=1;fillColor=#FEF2F2;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#0F172A;align=center;verticalAlign=middle;" value="Registrar Recusa do Cliente e Encerrar por Negativa (RN06)" vertex="1">
+          <mxGeometry height="65" width="220" x="40" y="380" as="geometry" />
+        </mxCell>
+        <mxCell id="e_ext_0" edge="1" parent="sys_box" source="ext_0" style="endArrow=open;endSize=12;dashed=1;html=1;rounded=0;strokeColor=#EF4444;strokeWidth=2;fontSize=10;fontStyle=1;fontColor=#B91C1C;" target="uc_main" value="«extend»">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+        <mxCell id="main_actor" parent="1" style="shape=umlActor;verticalLabelPosition=bottom;verticalAlign=top;html=1;outlineConnect=0;fillColor=#FEF3C7;strokeColor=#D97706;strokeWidth=2;fontSize=11;fontStyle=1;fontColor=#0F172A;" value="Técnico (Ator Primário)" vertex="1">
+          <mxGeometry height="90" width="60" x="50" y="260" as="geometry" />
+        </mxCell>
+        <mxCell id="edge_m_act" edge="1" parent="1" source="main_actor" style="endArrow=none;html=1;rounded=0;strokeColor=#1E293B;strokeWidth=2;" target="uc_main">
+          <mxGeometry relative="1" as="geometry" />
+        </mxCell>
+      </root>
+    </mxGraphModel>
+  </diagram>
+</mxfile>
