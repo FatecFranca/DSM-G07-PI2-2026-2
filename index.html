@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>TechManager</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@500;600&family=IBM+Plex+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="css/style.css">
+</head>
+<body>
+<div id="app"></div>
+
+<!--
+  A ORDEM IMPORTA: cada arquivo usa o que foi carregado antes dele.
+  1. config      → constantes (técnicos, horários, status…)
+  2. utils       → funções de formatação e cálculo
+  3. dados       → OS de exemplo (será trocado pelo banco/API)
+  4. state       → estado da tela + regras de agenda
+  5. componentes → pedaços de HTML reutilizáveis
+  6. views/*     → uma tela por arquivo
+  7. views/app   → layout com menu + render()
+  8. acoes       → o que cada botão faz
+  9. listeners   → cliques, digitação e selects
+ 10. main        → desenha a primeira tela
+-->
+<script src="js/config.js"></script>
+<script src="js/utils.js"></script>
+<script src="js/dados.js"></script>
+<script src="js/state.js"></script>
+<script src="js/componentes.js"></script>
+<script src="js/views/login.js"></script>
+<script src="js/views/portal.js"></script>
+<script src="js/views/painel.js"></script>
+<script src="js/views/ordens.js"></script>
+<script src="js/views/nova.js"></script>
+<script src="js/views/detalhe.js"></script>
+<script src="js/views/agenda.js"></script>
+<script src="js/views/app.js"></script>
+<script src="js/acoes.js"></script>
+<script src="js/listeners.js"></script>
+<script src="js/main.js"></script>
+</body>
+</html>
