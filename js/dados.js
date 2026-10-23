@@ -1,0 +1,14 @@
+/* ==================Demonstração de Dados =======================
+   ESTE ARQUIVO SERÁ SUBSTITUÍDO PELO BANCO.
+   Hoje as OS ficam só na memória do navegador (somem ao recarregar).
+*/
+
+const OS_EXEMPLO = [
+  { id:'os1240', numero:1240, cliente:'Ana Souza', cpf:'318.442.090-12', equip:'Notebook Dell', servico:'Formatação', defeito:'Sistema muito lento e travando ao abrir programas.', senha:'ana2024', tecnico:'João Pedro', data:'2026-10-08', hora:'09:00', sData:'2026-10-08', sHora:'14:00', status:'Em andamento', orc:'Aprovado', itens:[item(0), item(1)], origem:'Balcão' },
+  { id:'os1241', numero:1241, cliente:'Carlos Lima', cpf:'207.115.638-40', equip:'Desktop Positivo', servico:'Backup completo', defeito:'Quer backup dos arquivos antes de trocar de máquina.', senha:'', tecnico:'Marina Alves', data:'2026-10-07', hora:'14:00', sData:'2026-10-07', sHora:'16:00', status:'Concluído', orc:'Aprovado', itens:[item(1)], origem:'Balcão' },
+  { id:'os1242', numero:1242, cliente:'Empresa RM Ltda', cpf:'12.334.556/0001-90', equip:'Servidor Cisco', servico:'Upgrade de SO', defeito:'Atualizar o sistema do servidor de arquivos sem perder dados.', senha:'rm@srv', tecnico:'João Pedro', data:'2026-10-08', hora:'15:00', sData:'2026-10-09', sHora:'15:00', status:'Agendado', orc:'Aprovado', itens:[item(2), item(1)], origem:'Balcão' },
+  { id:'os1243', numero:1243, cliente:'Fernanda Dias', cpf:'442.901.377-05', equip:'Notebook Lenovo', servico:'Manutenção geral', defeito:'Esquenta muito e desliga sozinho depois de alguns minutos.', senha:'1234', tecnico:'Rafael Costa', data:'2026-10-08', hora:'10:00', sData:'2026-10-12', sHora:'10:00', status:'Aguardando aprovação', orc:'Pendente', itens:[item(3), item(4)], origem:'Balcão' },
+  { id:'os1244', numero:1244, cliente:'Pedro Martins', cpf:'590.120.884-33', equip:'Samsung Galaxy Book', servico:'Formatação', defeito:'Vírus e propagandas abrindo sozinhas no navegador.', senha:'', tecnico:'Marina Alves', data:'2026-10-08', hora:'11:00', sData:'2026-10-08', sHora:'13:00', status:'Concluído', orc:'Aprovado', itens:[item(0)], origem:'Portal' },
+  { id:'os1245', numero:1245, cliente:'Beatriz Rocha', cpf:'505.798.467-54', equip:'Notebook Acer', servico:'Diagnóstico', defeito:'Parou de ligar: ao apertar o botão de energia nada acontece, sem luz, sem ventoinha e sem imagem.', senha:'12345', tecnico:'Rafael Costa', data:'2026-10-09', hora:'10:00', status:'Aguardando triagem', orc:'Sem orçamento', itens:[], origem:'Portal' },
+  { id:'os1246', numero:1246, cliente:'Loja Center Tech', cpf:'45.210.009/0001-77', equip:'Desktop Recepção PC 03', servico:'Upgrade de SO', defeito:'Migrar do Windows 10 para o Windows 11.', senha:'', tecnico:'Marina Alves', data:'2026-10-08', hora:'15:00', sData:'2026-10-12', sHora:'09:00', status:'Agendado', orc:'Aprovado', itens:[item(2)], origem:'Balcão' }
+];
