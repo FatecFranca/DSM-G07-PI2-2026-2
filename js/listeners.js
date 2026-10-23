@@ -1,0 +1,35 @@
+/* ======================= Eventos do navegador =======================
+   delegação de eventos*/
+
+document.addEventListener('click', e => {
+  const el = e.target.closest('[data-action]');
+  if (el && !el.disabled && actions[el.dataset.action]) actions[el.dataset.action](el);
+});
+
+/* Campos: guardam o valor no estado sem redesenhar (o cursor não pula) */
+document.addEventListener('input', e => {
+  const el = e.target, m = el.dataset.model, k = el.dataset.key;
+  if (!m) return;
+  const v = el.type === 'checkbox' ? el.checked : el.value;
+  if (m === 'root') state[k] = v; else state[m][k] = v;
+
+  /* Subtotal do orçamento ao vivo */
+  if (el.dataset.liveOrc) {
+    const f = state.orcForm, sub = document.getElementById('of-sub');
+    if (sub) sub.textContent = brl(Math.max(1, Math.round(num(f.qtd))) * (num(f.peca) + num(f.mao)));
+  }
+  /* Busca ao vivo na lista de ordens */
+  if (el.dataset.live && state.screen === 'ordens') {
+    document.getElementById('ordens-tabela').innerHTML = tabelaOrdens(ordensFiltradas());
+  }
+});
+
+/* Enter no formulário do orçamento adiciona o item */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && e.target.dataset && e.target.dataset.liveOrc) { e.preventDefault(); actions.addItem(); }
+});
+
+/* Selects que mudam outras partes da tela (ex.: horários livres) */
+document.addEventListener('change', e => {
+  if (e.target.dataset.rerender) { if (e.target.closest('[data-model="form"]') || e.target.dataset.model === 'form') state.formErr = ''; render(); }
+});
