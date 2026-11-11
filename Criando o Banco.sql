@@ -137,3 +137,13 @@ CREATE TABLE aparelho (
 ) ENGINE=InnoDB;
 
 show tables;
+
+-- USUÁRIO BACKEND--
+CREATE USER IF NOT EXISTS 'techmanager_app'@'localhost'
+IDENTIFIED BY '#enhaB4ck';
+
+ALTER USER 'techmanager_app'@'localhost'
+IDENTIFIED BY '$enhaB4ck';
+
+GRANT ALL PRIVILEGES ON assistencia_tecnica.*
+TO 'techmanager_app'@'localhost';
