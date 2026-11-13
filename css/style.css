@@ -48,6 +48,7 @@ button:disabled{opacity:.45;cursor:not-allowed}
 /* Login */
 .center{min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px}
 .login{width:100%;max-width:400px;background:#fff;border:1px solid var(--line);border-radius:16px;padding:40px 32px;display:flex;flex-direction:column;gap:18px}
+.login-form{display:flex;flex-direction:column;gap:18px}
 .logo{text-align:center;font-family:'IBM Plex Mono',monospace;font-size:32px;font-weight:600;letter-spacing:-.5px}
 .divider{display:flex;align-items:center;gap:12px;color:var(--faint);font-size:13px}
 .divider::before,.divider::after{content:"";flex:1;height:1px;background:var(--line)}
@@ -57,8 +58,11 @@ button:disabled{opacity:.45;cursor:not-allowed}
 .sidebar{flex:1 1 220px;background:var(--side);border-right:1px solid var(--side-line);padding:20px 14px;display:flex;flex-direction:column;gap:4px}
 .brand{display:flex;align-items:center;gap:10px;padding:0 8px 18px;font-size:17px;font-weight:700}
 .brand i{width:30px;height:30px;border-radius:8px;background:var(--accent);display:block}
-.nav-btn{min-height:44px;padding:0 12px;border:0;border-radius:8px;text-align:left;font-size:14px;background:transparent;color:var(--text-2);font-weight:500}
+.nav-btn{width:100%;min-height:44px;padding:0 12px;border:0;border-radius:8px;text-align:left;font-size:14px;background:transparent;color:var(--text-2);font-weight:500;transition:background-color .15s,color .15s}
+.nav-btn:hover:not(.on){background:#DCEBF7;color:var(--text)}
 .nav-btn.on{background:#fff;color:var(--accent);font-weight:700;box-shadow:0 1px 2px rgba(15,23,42,.08)}
+.nav-spacer{height:12px}
+.sidebar>.btn{width:100%;justify-content:flex-start}
 .content{flex:999 1 560px;min-width:0;padding-bottom:40px}
 .topbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;padding:16px 28px;background:#fff;border-bottom:1px solid var(--line)}
 .topbar h1{margin:0;font-size:20px;font-weight:700}
@@ -143,3 +147,13 @@ button.trow:hover{background:#F8FAFC}
 .box{padding:14px;border-radius:10px;background:var(--field);border:1px solid var(--line)}
 .box span{font-size:12px;color:var(--muted);font-weight:600;display:block}
 .box b{font-size:17px}
+
+@media(max-width:720px){
+  .shell{display:block}
+  .sidebar{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:8px;border-right:0;border-bottom:1px solid var(--side-line)}
+  .brand{grid-column:1/-1;padding-bottom:8px}
+  .nav-spacer{display:none}
+  .sidebar .nav-btn,.sidebar>.btn{width:100%;justify-content:center;text-align:center}
+  .content{width:100%}
+  .topbar,.page{padding-left:16px;padding-right:16px}
+}

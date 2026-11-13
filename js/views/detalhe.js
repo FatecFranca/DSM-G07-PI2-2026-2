@@ -47,7 +47,14 @@ function viewDetalhe() {
       <section class="card stack" style="gap:14px">
         <div style="display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap">
           <h2 style="margin:0">Orçamento</h2>
-          ${pill(ordem.orc, ORC_CLASS[ordem.orc] || 's-triagem')}
+          <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
+            ${pill(ordem.orc, ORC_CLASS[ordem.orc] || 's-triagem')}
+            ${ordem.orc === 'Pendente' && ordem.itens.length
+              ? `<button type="button" class="btn btn-ok" data-action="aprovarOrcamento"${state.orcSaving ? ' disabled aria-busy="true"' : ''}>
+                  ${state.orcSaving ? 'Salvando...' : 'Registrar aprovação do cliente'}
+                </button>`
+              : ''}
+          </div>
         </div>
         ${ordem.itens.length ? `<div class="scroll">
           <div class="thead t-orc"><span>Serviço cadastrado</span><span>Qtd</span><span>Peças</span><span>Mão de obra</span><span>Subtotal</span><span></span></div>
@@ -57,7 +64,7 @@ function viewDetalhe() {
             <span>${item.custo ? brl(item.custo) : '—'}</span>
             <span>${item.mao ? brl(item.mao) : '—'}</span>
             <b>${brl(item.qtd * (item.mao + item.custo))}</b>
-            <span>${editavel ? `<button type="button" class="icon-x" aria-label="Remover serviço" data-action="remover" data-idx="${indice}">×</button>` : ''}</span>
+            <span>${editavel ? `<button type="button" class="icon-x" aria-label="Remover serviço" data-action="remover" data-idx="${indice}"${state.orcSaving ? ' disabled' : ''}>×</button>` : ''}</span>
           </div>`).join('')}
           <div style="display:flex;justify-content:flex-end;gap:12px;padding-top:10px;font-size:16px;min-width:560px">
             <span style="color:var(--muted)">Total</span><b>${brl(totalOf(ordem))}</b>
@@ -75,17 +82,17 @@ function formOrcamento() {
   const subtotal = Math.max(1, Math.round(num(formulario.qtd))) *
     (num(formulario.peca) + num(formulario.mao));
   const opcoes = state.servicos.map(servico =>
-    `<option value="${servico.id_servico}"${String(servico.id_servico) === formulario.servicoId ? ' selected' : ''}>${esc(servico.descricao)}</option>`
+    `<option value="${esc(servico.descricao)}"></option>`
   ).join('');
 
   return `<div class="orc-form">
-    <span class="lbl" style="font-size:14px">Adicionar serviço cadastrado</span>
-    ${state.servicos.length ? `<div class="field">
-      <label for="of-servico">Serviço</label>
-      <select id="of-servico" data-model="orcForm" data-key="servicoId">
-        <option value="">Selecione no catálogo</option>${opcoes}
-      </select>
-    </div>` : '<p class="hint">Não há serviços cadastrados no catálogo. Peça ao DBA que cadastre os serviços.</p>'}
+    <span class="lbl" style="font-size:14px">Serviço a realizar</span>
+    <div class="field">
+      <label for="of-servico">Descrição do serviço</label>
+      <input id="of-servico" list="of-catalogo-servicos" maxlength="150" data-model="orcForm" data-key="descricao" value="${esc(formulario.descricao)}" placeholder="Digite o serviço ou escolha uma sugestão">
+      <datalist id="of-catalogo-servicos">${opcoes}</datalist>
+    </div>
+    <span class="hint">Você pode escolher uma sugestão ou digitar um serviço novo. Ao salvar, o serviço novo será cadastrado no catálogo.</span>
     <div class="grid4">
       <div class="field"><label for="of-qtd">Quantidade</label><input id="of-qtd" type="number" min="1" step="1" data-model="orcForm" data-key="qtd" data-live-orc="1" value="${esc(formulario.qtd)}"></div>
       <div class="field"><label for="of-peca">Custo das peças</label><div class="money"><span>R$</span><input id="of-peca" inputmode="decimal" data-model="orcForm" data-key="peca" data-live-orc="1" value="${esc(formulario.peca)}" placeholder="0,00"></div></div>
@@ -94,7 +101,9 @@ function formOrcamento() {
     </div>
     <span class="hint">O banco grava o serviço do catálogo, quantidade e custos informados.</span>
     <div style="display:flex;justify-content:flex-end">
-      <button type="button" class="btn btn-primary" data-action="addItem"${state.servicos.length ? '' : ' disabled'}>Salvar no orçamento</button>
+      <button type="button" class="btn btn-primary" data-action="addItem"${state.orcSaving ? ' disabled aria-busy="true"' : ''}>
+        ${state.orcSaving ? 'Salvando...' : 'Lançar serviço no orçamento'}
+      </button>
     </div>
   </div>`;
 }

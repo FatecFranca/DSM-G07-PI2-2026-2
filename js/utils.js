@@ -27,7 +27,7 @@ const brl = n => 'R$ ' + n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?
 const totalOf = o => o.itens.reduce((a, i) => a + i.qtd * (i.mao + i.custo), 0);
 
 /* Formulários vazios */
-const emptyOrcForm = () => ({ servicoId:'', qtd:'1', peca:'', mao:'' });
+const emptyOrcForm = () => ({ descricao:'', qtd:'1', peca:'', mao:'' });
 const emptyForm = () => ({
   cliente: '',
   cpf: '',
@@ -42,7 +42,25 @@ const emptyForm = () => ({
   equip: '',
   numeroSerie: '',
   defeito: '',
-  data: DIAS[0],
-  hora: HORAS[0],
+  data: PRIMEIRO_AGENDAMENTO.data,
+  hora: PRIMEIRO_AGENDAMENTO.hora,
+  buscar: false
+});
+const emptyPortal = () => ({
+  nome: '',
+  cpf: '',
+  telefone: '',
+  cep: '',
+  numero: '',
+  bairro: '',
+  rua: '',
+  cidade: '',
+  estado: '',
+  referencia: '',
+  equip: '',
+  numeroSerie: '',
+  defeito: '',
+  data: PRIMEIRO_AGENDAMENTO.data,
+  hora: PRIMEIRO_AGENDAMENTO.hora,
   buscar: false
 });

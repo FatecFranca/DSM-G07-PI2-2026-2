@@ -2,14 +2,39 @@ const API_BASE_URL = '/api';
 
 async function lerResposta(response) {
   const text = await response.text();
+  const contentType = response.headers.get('content-type') || '';
   let data = {};
 
   if (text) {
-    try {
-      data = JSON.parse(text);
-    } catch {
-      data = { erro: text || `Erro HTTP ${response.status}` };
+    if (contentType.includes('application/json')) {
+      try {
+        data = JSON.parse(text);
+      } catch {
+        const error = new Error(
+          `O servidor retornou JSON inválido (HTTP ${response.status}).`
+        );
+        error.status = response.status;
+        throw error;
+      }
+    } else {
+      data = {
+        erro: `O servidor respondeu em formato inesperado (HTTP ${response.status}).`
+      };
     }
+  }
+
+  if (!contentType.includes('application/json')) {
+    const error = new Error(
+      data.erro || `Resposta inesperada do servidor (HTTP ${response.status}).`
+    );
+    error.status = response.status;
+    throw error;
+  }
+
+  if (!text) {
+    const error = new Error(`O servidor retornou uma resposta vazia (HTTP ${response.status}).`);
+    error.status = response.status;
+    throw error;
   }
 
   if (!response.ok) {

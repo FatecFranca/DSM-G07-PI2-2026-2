@@ -6,6 +6,12 @@ document.addEventListener('click', e => {
   if (el && !el.disabled && actions[el.dataset.action]) actions[el.dataset.action](el);
 });
 
+document.addEventListener('submit', e => {
+  if (!e.target.matches('[data-form="login"]')) return;
+  e.preventDefault();
+  actions.login();
+});
+
 /* Campos: guardam o valor no estado sem redesenhar (o cursor não pula) */
 document.addEventListener('input', e => {
   const el = e.target, m = el.dataset.model, k = el.dataset.key;
@@ -38,6 +44,12 @@ document.addEventListener('change', e => {
   }
   if (rerender) {
     if (model === 'form') state.formErr = '';
+    if ((model === 'form' || model === 'portal') && key === 'data') {
+      const horarios = horariosDisponiveis(e.target.value);
+      if (!horarios.includes(state[model].hora)) {
+        state[model].hora = horarios[0] || '';
+      }
+    }
     render();
   }
 });
