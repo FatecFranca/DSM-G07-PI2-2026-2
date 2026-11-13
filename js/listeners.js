@@ -31,5 +31,13 @@ document.addEventListener('keydown', e => {
 
 /* Selects que mudam outras partes da tela (ex.: horários livres) */
 document.addEventListener('change', e => {
-  if (e.target.dataset.rerender) { if (e.target.closest('[data-model="form"]') || e.target.dataset.model === 'form') state.formErr = ''; render(); }
+  const { model, key, rerender } = e.target.dataset;
+  if (model && key && e.target.tagName === 'SELECT') {
+    if (model === 'root') state[key] = e.target.value;
+    else state[model][key] = e.target.value;
+  }
+  if (rerender) {
+    if (model === 'form') state.formErr = '';
+    render();
+  }
 });
