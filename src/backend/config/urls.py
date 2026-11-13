@@ -15,8 +15,17 @@ Including another URLconf
     2. Add a URL to urlpatterns:  path('blog/', include('blog.urls'))
 """
 from django.contrib import admin
-from django.urls import path
+from django.conf import settings
+from django.urls import include, path
+from django.views.static import serve
+from pathlib import Path
+
+FRONTEND_ROOT = Path(settings.BASE_DIR).parents[1]
 
 urlpatterns = [
     path('admin/', admin.site.urls),
+    path("api/", include("ordens.urls")),
+    path("", serve, {"document_root": FRONTEND_ROOT, "path": "index.html"}),
+    path("js/<path:path>", serve, {"document_root": FRONTEND_ROOT / "js"}),
+    path("css/<path:path>", serve, {"document_root": FRONTEND_ROOT / "css"}),
 ]

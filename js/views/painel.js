@@ -11,7 +11,7 @@ function viewPainel() {
   ];
   const recentes = [...os].sort((a, b) => b.numero - a.numero).slice(0, 6);
   const solic = triagem.filter(o => o.origem === 'Portal');
-  const counts = TECHS.map(t => abertas.filter(o => o.tecnico === t).length);
+  const counts = tecnicosNomes().map(t => abertas.filter(o => o.tecnico === t).length);
   const max = Math.max(1, ...counts);
   return `
   <div class="grid-auto">${kpis.map(k => `<div class="kpi"><div class="kpi-top">${k[0]}<i style="background:${k[3]}"></i></div><b>${k[1]}</b><small>${k[2]}</small></div>`).join('')}</div>
@@ -26,7 +26,7 @@ function viewPainel() {
         ${solic.map(o => `<button type="button" class="list-btn" style="justify-content:space-between;align-items:center" data-action="open" data-id="${o.id}"><span class="d"><b>${esc(o.cliente)} · ${esc(o.equip)}</b><span>OS ${o.numero} · ${fmt(o.data)} ${o.hora}</span></span><span style="font-size:13px;font-weight:600;color:var(--accent)">Triar</span></button>`).join('')}</section>` : ''}
       <section class="card"><h2>Próximos agendamentos</h2>${proximosList(true)}</section>
       <section class="card"><h2>OS abertas por técnico</h2><div class="stack" style="gap:12px">
-        ${TECHS.map((t, i) => `<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font-size:14px"><span>${t}</span><b>${counts[i]}</b></div><div class="bar"><i style="width:${Math.round(counts[i] / max * 100)}%"></i></div></div>`).join('')}
+        ${tecnicosNomes().map((t, i) => `<div style="display:flex;flex-direction:column;gap:6px"><div style="display:flex;justify-content:space-between;font-size:14px"><span>${esc(t)}</span><b>${counts[i]}</b></div><div class="bar"><i style="width:${Math.round(counts[i] / max * 100)}%"></i></div></div>`).join('')}
       </div></section>
     </div>
   </div>`;
