@@ -12,11 +12,10 @@ function viewApp() {
       ${nav}
       <div style="height:12px"></div>
       <button type="button" class="btn btn-primary" data-action="nova">+ Nova O.S.</button>
-      <button type="button" class="btn" style="background:transparent;border:1px solid #C3D6E8;color:var(--text);font-weight:500" data-action="portal">Abrir portal do cliente</button>
-      <button type="button" class="nav-btn" data-action="go" data-to="login">Sair</button>
+      <button type="button" class="nav-btn" data-action="logout">Sair</button>
     </nav>
     <main class="content">
-      <header class="topbar"><h1>${TITLES[state.screen]}</h1><div class="user"><div class="avatar">MM</div>Mateus Morgan · Atendente</div></header>
+      <header class="topbar"><h1>${TITLES[state.screen]}</h1><div class="user"><div class="avatar">${esc((state.tecnico?.nome || 'T').slice(0, 2).toUpperCase())}</div>${esc(state.tecnico?.nome || 'Técnico')}</div></header>
       <div class="page">
         ${state.flash ? `<div role="status" class="alert-ok"><span>${esc(state.flash)}</span><button type="button" aria-label="Fechar aviso" data-action="closeFlash" style="min-width:36px;min-height:36px;border:0;background:transparent;color:#065F46;font-size:18px">×</button></div>` : ''}
         ${state.apiError ? `<div role="alert" class="alert alert-err">${esc(state.apiError)}</div>` : ''}

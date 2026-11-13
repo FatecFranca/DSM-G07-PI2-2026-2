@@ -3,8 +3,15 @@ from django.urls import path
 from . import views
 
 urlpatterns = [
-    path("tecnicos/", views.listar_tecnicos, name="listar_tecnicos"),
-     path("csrf/", views.csrf_token, name="csrf_token"),
-    path("tecnicos/", views.tecnicos, name="tecnicos"),
-    path("tecnicos/<int:id_tecnico>/", views.tecnico_por_id, name="tecnico_por_id"),
+    path("csrf/", views.csrf_cookie, name="csrf_cookie"),
+    path("login/", views.api_login, name="api_login"),
+    path("me/", views.api_me, name="api_me"),
+    path("logout/", views.api_logout, name="api_logout"),
+    path("servicos/", views.listar_servicos, name="listar_servicos"),
+    path(
+        "os/<int:os_id>/orcamento/",
+        views.orcamento_os,
+        name="orcamento_os",
+    ),
+    path("os/", views.os_collection, name="os_collection"),
 ]

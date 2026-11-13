@@ -148,3 +148,8 @@ IDENTIFIED BY '$enhaB4ck';
 
 GRANT ALL PRIVILEGES ON assistencia_tecnica.*
 TO 'techmanager_app'@'localhost';
+
+-- Criação do primeiro técnico para teste da validação de login
+USE assistencia_tecnica;
+INSERT into tecnico(nome,nivel) VALUES
+("Técnico teste","Proprietário");

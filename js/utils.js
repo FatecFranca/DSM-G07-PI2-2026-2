@@ -2,6 +2,14 @@
 
 /* conversor "1.234,56" ou "1234.56" em número */
 const num = v => { let t = String(v).trim(); if (t.includes(',')) t = t.replace(/\./g, '').replace(',', '.'); const n = parseFloat(t); return isNaN(n) ? 0 : n; };
+const moeda = valor => {
+  let texto = String(valor).trim();
+  if (!texto) return 0;
+  if (texto.includes(',')) texto = texto.replace(/\./g, '').replace(',', '.');
+  if (!/^\d+(\.\d{1,2})?$/.test(texto)) return null;
+  const numero = Number(texto);
+  return Number.isFinite(numero) ? numero : null;
+};
 
 /* escapa texto antes de colocar no HTML (evita XSS) */
 const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
@@ -18,13 +26,23 @@ const brl = n => 'R$ ' + n.toFixed(2).replace('.', ',').replace(/\B(?=(\d{3})+(?
 /* Total do orçamento de uma OS */
 const totalOf = o => o.itens.reduce((a, i) => a + i.qtd * (i.mao + i.custo), 0);
 
-/* OS encerrada? */
-const isClosed = o => o.status === 'Concluído' || o.status === 'Cancelado';
-
-/* Item do catálogo (usado só nos dados de exemplo) */
-const item = (i, q = 1) => ({ ...CATALOGO[i], qtd: q });
-
 /* Formulários vazios */
-const emptyOrcForm = () => ({ desc:'', qtd:'1', peca:'', mao:'' });
-const emptyForm = () => ({ cliente:'', cpf:'', equip:'', servico:'Formatação', defeito:'', senha:'', tecnico:'João Pedro', data:'2026-10-09', hora:'08:00' });
-const emptyPortal = () => ({ nome:'', cpf:'', tel:'', equip:'', defeito:'', data:'2026-10-09', hora:'' });
+const emptyOrcForm = () => ({ servicoId:'', qtd:'1', peca:'', mao:'' });
+const emptyForm = () => ({
+  cliente: '',
+  cpf: '',
+  telefone: '',
+  cep: '',
+  numeroEndereco: '',
+  bairro: '',
+  rua: '',
+  cidade: '',
+  estado: '',
+  referencia: '',
+  equip: '',
+  numeroSerie: '',
+  defeito: '',
+  data: DIAS[0],
+  hora: HORAS[0],
+  buscar: false
+});

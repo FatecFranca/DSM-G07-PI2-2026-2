@@ -118,13 +118,14 @@ button.trow:hover{background:#F8FAFC}
 
 /* Agenda */
 .ag{min-width:680px;display:flex;flex-direction:column;gap:6px}
-.ag-row{display:grid;grid-template-columns:70px repeat(3,minmax(0,1fr));gap:6px}
+.ag-row{display:grid;grid-template-columns:70px minmax(0,1fr);gap:6px}
 .ag-head{font-size:13px;font-weight:700;color:var(--text-2)}
 .ag-head span{padding:4px 8px}
 .ag-h{font-size:13px;font-weight:600;color:var(--muted);padding-top:12px}
 .cell{width:100%;min-height:56px;padding:8px 10px;border-radius:8px;text-align:left;display:flex;flex-direction:column;justify-content:center;gap:2px}
 .cell b{font-size:13px}.cell span{font-size:12px}
 .cell.livre{background:#fff;border:1px dashed var(--field-line);color:var(--faint)}
+.cell.ocupado{background:#DBEAFE;border:1px solid #93C5FD;color:#1E3A8A}
 
 /* Status */
 .s-triagem{background:#F1F5F9;color:#334155;border:1px solid #CBD5E1}
