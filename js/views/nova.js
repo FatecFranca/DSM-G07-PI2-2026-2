@@ -37,7 +37,7 @@ function viewNova() {
       </p>
       <div class="grid-auto" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
         ${selectF('n-dt', 'Data', 'form', 'data', DIAS, curto)}
-        ${selectF('n-hr', 'Horário', 'form', 'hora', HORAS)}
+        ${selectF('n-hr', 'Horário', 'form', 'hora', horariosDisponiveis(f.data))}
       </div>
 
       <label style="display:flex;align-items:center;gap:8px">

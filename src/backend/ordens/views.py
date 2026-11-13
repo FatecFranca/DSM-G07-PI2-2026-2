@@ -3,6 +3,7 @@ import secrets
 import uuid
 from decimal import Decimal, InvalidOperation
 
+from django.conf import settings
 from django.contrib.auth import authenticate, login, logout
 from django.contrib.auth.hashers import make_password
 from django.db import transaction
@@ -21,7 +22,13 @@ from .models import (
     OrdemServico,
     OsAgendamento,
     Servico,
+    Tecnico,
 )
+
+
+class _ServicoDuplicadoNoOrcamento(Exception):
+    pass
+
 
 @ensure_csrf_cookie
 @require_GET
@@ -106,6 +113,23 @@ def criar_os(request):
             status=403,
         )
 
+    return _registrar_os(request, tecnico)
+
+
+@require_POST
+def solicitar_os_portal(request):
+    try:
+        tecnico = Tecnico.objects.get(pk=settings.DEFAULT_TECHNICIAN_ID)
+    except Tecnico.DoesNotExist:
+        return JsonResponse(
+            {"erro": "O técnico padrão do portal não existe no cadastro do MySQL."},
+            status=503,
+        )
+
+    return _registrar_os(request, tecnico, resposta_publica=True)
+
+
+def _registrar_os(request, tecnico, resposta_publica=False):
     try:
         dados = json.loads(request.body)
     except (json.JSONDecodeError, UnicodeDecodeError):
@@ -159,6 +183,27 @@ def criar_os(request):
             status=400,
         )
 
+    limites_cliente = {
+        "nome_completo": 120,
+        "telefone": 20,
+        "numero": 10,
+        "bairro": 80,
+        "rua": 150,
+        "cidade": 80,
+    }
+    for campo, limite in limites_cliente.items():
+        if len(cliente_dados[campo].strip()) > limite:
+            return JsonResponse(
+                {"erro": f"O campo cliente.{campo} pode ter no máximo {limite} caracteres."},
+                status=400,
+            )
+
+    cep = "".join(
+        caractere for caractere in cliente_dados["cep"] if caractere.isdigit()
+    )
+    if len(cep) != 8:
+        return JsonResponse({"erro": "O CEP precisa ter 8 dígitos."}, status=400)
+
     numero_serie = aparelho_dados.get("numero_serie", "")
     equipamento = aparelho_dados.get("equipamento", "")
     defeito = aparelho_dados.get("defeito", "")
@@ -173,13 +218,25 @@ def criar_os(request):
             status=400,
         )
 
+    if len(numero_serie.strip()) > 60:
+        return JsonResponse(
+            {"erro": "O número de série pode ter no máximo 60 caracteres."},
+            status=400,
+        )
+
     if not equipamento.strip() or not defeito.strip():
         return JsonResponse(
             {"erro": "Informe o tipo de aparelho e o problema relatado."},
             status=400,
         )
 
-    data = parse_datetime(agendamento_dados.get("data", ""))
+    data_texto = agendamento_dados.get("data", "")
+    if not isinstance(data_texto, str):
+        return JsonResponse(
+            {"erro": "A data e hora precisam estar em formato ISO."},
+            status=400,
+        )
+    data = parse_datetime(data_texto)
     buscar = agendamento_dados.get("buscar")
 
     if data is None:
@@ -191,6 +248,11 @@ def criar_os(request):
     if timezone.is_naive(data):
         return JsonResponse(
             {"erro": "A data precisa incluir o fuso horário."},
+            status=400,
+        )
+    if data <= timezone.now():
+        return JsonResponse(
+            {"erro": "Escolha uma data e hora futuras para o atendimento."},
             status=400,
         )
 
@@ -213,6 +275,11 @@ def criar_os(request):
             {"erro": "A referência do endereço precisa ser texto."},
             status=400,
         )
+    if len(referencia.strip()) > 150:
+        return JsonResponse(
+            {"erro": "A referência pode ter no máximo 150 caracteres."},
+            status=400,
+        )
 
     observacao = (
         f"Equipamento: {equipamento.strip()}\n"
@@ -226,7 +293,7 @@ def criar_os(request):
                 "nome_completo": cliente_dados["nome_completo"].strip(),
                 "senha": make_password(secrets.token_urlsafe(32)),
                 "telefone": cliente_dados["telefone"].strip(),
-                "cep": cliente_dados["cep"].strip(),
+                "cep": cep,
                 "numero": cliente_dados["numero"].strip(),
                 "bairro": cliente_dados["bairro"].strip(),
                 "rua": cliente_dados["rua"].strip(),
@@ -261,21 +328,28 @@ def criar_os(request):
             id_agendamento=agendamento,
         )
 
-    return JsonResponse(
-        {
-            "id": ordem.id_ordem_servico,
-            "numero_os": ordem.numero_os,
-            "cliente_id": cliente.id_cliente,
-            "tecnico": {
-                "id": tecnico.id_tecnico,
-                "nome": tecnico.nome,
-            },
-            "aparelho_id": aparelho.id_aparelho,
-            "agendamento_id": agendamento.id_agendamento,
-            "cliente_criado": cliente_novo,
+    resposta = {
+        "id": ordem.id_ordem_servico,
+        "numero_os": ordem.numero_os,
+        "cliente_id": cliente.id_cliente,
+        "tecnico": {
+            "id": tecnico.id_tecnico,
+            "nome": tecnico.nome,
         },
-        status=201,
-    )
+        "aparelho_id": aparelho.id_aparelho,
+        "agendamento_id": agendamento.id_agendamento,
+        "cliente_criado": cliente_novo,
+    }
+    if resposta_publica:
+        resposta = {
+            "numero_os": ordem.numero_os,
+            "agendamento": {
+                "data": agendamento.data.isoformat(),
+                "buscar": bool(agendamento.buscar),
+            },
+        }
+
+    return JsonResponse(resposta, status=201)
 
 @require_GET
 def listar_os(request):
@@ -445,7 +519,19 @@ def _valor_monetario(valor, campo):
     return resultado, None
 
 
-@require_http_methods(["GET", "PUT", "DELETE"])
+def _resolver_servico_orcamento(descricao):
+    servico = (
+        Servico.objects
+        .filter(descricao__iexact=descricao)
+        .order_by("id_servico")
+        .first()
+    )
+    if servico is not None:
+        return servico
+    return Servico.objects.create(descricao=descricao, status="Ativo")
+
+
+@require_http_methods(["GET", "PUT", "DELETE", "PATCH"])
 def orcamento_os(request, os_id):
     if not request.user.is_authenticated:
         return JsonResponse({"erro": "Faça login."}, status=401)
@@ -471,6 +557,36 @@ def orcamento_os(request, os_id):
         return JsonResponse({
             "orcamento": _dados_orcamento(orcamento) if orcamento else None,
         })
+
+    if request.method == "PATCH":
+        if orcamento is None:
+            return JsonResponse(
+                {"erro": "Não há orçamento para registrar a aprovação."},
+                status=404,
+            )
+        if orcamento.status != "Pendente":
+            return JsonResponse(
+                {"erro": "Só é possível registrar a aprovação de um orçamento pendente."},
+                status=409,
+            )
+        try:
+            dados = json.loads(request.body)
+        except (json.JSONDecodeError, UnicodeDecodeError):
+            return JsonResponse({"erro": "JSON inválido."}, status=400)
+        if not isinstance(dados, dict) or dados.get("status") != "Aprovado":
+            return JsonResponse(
+                {"erro": "A única alteração disponível é registrar a aprovação do cliente."},
+                status=400,
+            )
+        if not ItemServico.objects.filter(id_orcamento=orcamento).exists():
+            return JsonResponse(
+                {"erro": "Inclua pelo menos um serviço antes de registrar a aprovação."},
+                status=409,
+            )
+
+        orcamento.status = "Aprovado"
+        orcamento.save(update_fields=["status"])
+        return JsonResponse({"orcamento": _dados_orcamento(orcamento)})
 
     if request.method == "DELETE":
         if orcamento is None:
@@ -513,13 +629,7 @@ def orcamento_os(request, os_id):
                 status=400,
             )
 
-        id_servico = item.get("id_servico")
         quantidade = item.get("quantidade")
-        if isinstance(id_servico, bool) or not str(id_servico).isdigit():
-            return JsonResponse(
-                {"erro": f"O item {indice + 1} precisa indicar um serviço válido."},
-                status=400,
-            )
         if (
             isinstance(quantidade, bool)
             or not isinstance(quantidade, int)
@@ -531,6 +641,30 @@ def orcamento_os(request, os_id):
                 status=400,
             )
 
+        if "id_servico" in item:
+            id_servico = item.get("id_servico")
+            if isinstance(id_servico, bool) or not str(id_servico).isdigit():
+                return JsonResponse(
+                    {"erro": f"O item {indice + 1} precisa indicar um serviço válido."},
+                    status=400,
+                )
+            referencia_servico = {"id_servico": int(id_servico)}
+            ids_servico.append(int(id_servico))
+        else:
+            descricao = item.get("descricao_servico")
+            if not isinstance(descricao, str) or not descricao.strip():
+                return JsonResponse(
+                    {"erro": f"Informe a descrição do serviço no item {indice + 1}."},
+                    status=400,
+                )
+            descricao = descricao.strip()
+            if len(descricao) > 150:
+                return JsonResponse(
+                    {"erro": f"A descrição do serviço no item {indice + 1} pode ter no máximo 150 caracteres."},
+                    status=400,
+                )
+            referencia_servico = {"descricao_servico": descricao}
+
         mao, erro = _valor_monetario(item.get("mao_de_obra"), f"itens[{indice}].mao_de_obra")
         if erro:
             return JsonResponse({"erro": erro}, status=400)
@@ -538,10 +672,8 @@ def orcamento_os(request, os_id):
         if erro:
             return JsonResponse({"erro": erro}, status=400)
 
-        id_servico = int(id_servico)
-        ids_servico.append(id_servico)
         itens_validados.append({
-            "id_servico": id_servico,
+            **referencia_servico,
             "quantidade": quantidade,
             "mao_de_obra": mao,
             "custo_item": custo,
@@ -560,23 +692,45 @@ def orcamento_os(request, os_id):
             status=400,
         )
 
-    with transaction.atomic():
-        if orcamento is None:
-            orcamento = Orcamento.objects.create(
-                id_ordem_servico=ordem,
-                status="Pendente",
-            )
+    try:
+        with transaction.atomic():
+            itens_com_servico = []
+            ids_resolvidos = set()
+            for item in itens_validados:
+                servico = (
+                    servicos[item["id_servico"]]
+                    if "id_servico" in item
+                    else _resolver_servico_orcamento(item["descricao_servico"])
+                )
+                if servico.id_servico in ids_resolvidos:
+                    raise _ServicoDuplicadoNoOrcamento
+                ids_resolvidos.add(servico.id_servico)
+                itens_com_servico.append({
+                    **item,
+                    "servico": servico,
+                })
 
-        ItemServico.objects.filter(id_orcamento=orcamento).delete()
-        ItemServico.objects.bulk_create([
-            ItemServico(
-                id_orcamento=orcamento,
-                id_servico=servicos[item["id_servico"]],
-                quantidade=item["quantidade"],
-                mao_de_obra=item["mao_de_obra"],
-                custo_item=item["custo_item"],
-            )
-            for item in itens_validados
-        ])
+            if orcamento is None:
+                orcamento = Orcamento.objects.create(
+                    id_ordem_servico=ordem,
+                    status="Pendente",
+                )
+
+            ItemServico.objects.filter(id_orcamento=orcamento).delete()
+            ItemServico.objects.bulk_create([
+                ItemServico(
+                    id_orcamento=orcamento,
+                    id_servico=item["servico"],
+                    quantidade=item["quantidade"],
+                    mao_de_obra=item["mao_de_obra"],
+                    custo_item=item["custo_item"],
+                )
+                for item in itens_com_servico
+            ])
+    except _ServicoDuplicadoNoOrcamento:
+        return JsonResponse(
+            {"erro": "Cada serviço pode aparecer uma única vez; ajuste a quantidade."},
+            status=400,
+        )
 
     return JsonResponse({"orcamento": _dados_orcamento(orcamento)})

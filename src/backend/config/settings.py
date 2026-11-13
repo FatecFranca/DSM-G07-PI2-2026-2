@@ -70,6 +70,9 @@ TEMPLATES = [
 
 WSGI_APPLICATION = 'config.wsgi.application'
 
+# Técnico padrão que receberá as solicitações do portal público.
+DEFAULT_TECHNICIAN_ID = int(os.environ.get("DEFAULT_TECHNICIAN_ID", "1"))
+
 
 # Database
 # https://docs.djangoproject.com/en/6.1/ref/settings/#databases

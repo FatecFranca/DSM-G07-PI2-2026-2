@@ -6,28 +6,60 @@ function go(screen, extra = {}) {
 
 async function salvarItensOrcamento(ordem, itens) {
   const caminho = `/os/${ordem.id}/orcamento/`;
+  let orcamento;
   if (itens.length) {
-    await apiRequest(caminho, {
+    const resposta = await apiRequest(caminho, {
       method: 'PUT',
       body: {
         itens: itens.map(item => ({
-          id_servico: Number(item.idServico),
+          ...(item.idServico
+            ? { id_servico: Number(item.idServico) }
+            : { descricao_servico: item.desc }),
           quantidade: item.qtd,
           mao_de_obra: item.mao,
           custo_item: item.custo
         }))
       }
     });
+    orcamento = resposta.orcamento;
+    if (!orcamento) {
+      throw new Error('O servidor não confirmou o orçamento salvo.');
+    }
   } else {
     await apiRequest(caminho, { method: 'DELETE' });
+    orcamento = null;
   }
 
-  await carregarDadosDoTecnico();
+  ordem.orc = orcamento?.status || 'Sem orçamento';
+  ordem.itens = (orcamento?.itens || []).map(item => ({
+    idServico: String(item.id_servico),
+    desc: item.descricao,
+    qtd: Number(item.quantidade),
+    mao: Number(item.mao_de_obra),
+    custo: Number(item.custo_item)
+  }));
+  ordem.servico = ordem.itens.map(item => item.desc).join(', ') || '—';
+  state.os = state.os.map(item => item.id === ordem.id ? ordem : item);
   state.selId = ordem.id;
 }
 
 const actions = {
   go: el => go(el.dataset.to),
+  portal: () => go('portal', {
+    portal: emptyPortal(),
+    portalDone: null,
+    pErr: ''
+  }),
+  voltarPortal: async () => {
+    if (!state.tecnico) return go('login');
+    try {
+      await carregarDadosDoTecnico();
+      state.apiError = '';
+    } catch (erro) {
+      state.apiError = `Não foi possível atualizar as ordens: ${erro.message}`;
+    }
+    go('painel');
+  },
   nova: () => go('nova', { form: emptyForm(), formErr: '' }),
   open: el => go('detalhe', {
     selId: el.dataset.id,
@@ -42,6 +74,68 @@ const actions = {
     formErr: ''
   }),
   pickHora: el => { state.form.hora = el.dataset.h; state.formErr = ''; render(); },
+
+  enviarPortal: async () => {
+    const formulario = state.portal;
+    const obrigatorios = [
+      formulario.nome, formulario.cpf, formulario.telefone, formulario.cep,
+      formulario.numero, formulario.bairro, formulario.rua, formulario.cidade,
+      formulario.estado, formulario.equip, formulario.defeito,
+      formulario.data, formulario.hora
+    ];
+    if (!obrigatorios.every(valor => String(valor).trim())) {
+      state.pErr = 'Preencha todos os campos obrigatórios.';
+      return render();
+    }
+
+    const payload = {
+      cliente: {
+        nome_completo: formulario.nome.trim(),
+        cpf: formulario.cpf.replace(/\D/g, ''),
+        telefone: formulario.telefone.trim(),
+        cep: formulario.cep.replace(/\D/g, ''),
+        numero: formulario.numero.trim(),
+        bairro: formulario.bairro.trim(),
+        rua: formulario.rua.trim(),
+        cidade: formulario.cidade.trim(),
+        estado: formulario.estado.toUpperCase(),
+        referencia: formulario.referencia.trim()
+      },
+      aparelho: {
+        numero_serie: formulario.numeroSerie.trim(),
+        equipamento: formulario.equip.trim(),
+        defeito: formulario.defeito.trim()
+      },
+      agendamento: {
+        data: new Date(`${formulario.data}T${formulario.hora}:00`).toISOString(),
+        buscar: formulario.buscar
+      }
+    };
+
+    try {
+      const resposta = await apiRequest('/portal/solicitacoes/', {
+        method: 'POST',
+        body: payload
+      });
+      state.portalDone = {
+        numero: resposta.numero_os,
+        data: formulario.data,
+        hora: formulario.hora
+      };
+      state.portal = emptyPortal();
+      state.pErr = '';
+      render();
+    } catch (erro) {
+      state.pErr = erro.message;
+      render();
+    }
+  },
+  novaSolic: () => {
+    state.portal = emptyPortal();
+    state.portalDone = null;
+    state.pErr = '';
+    render();
+  },
 
   criar: async () => {
     const f = state.form;
@@ -98,11 +192,10 @@ const actions = {
   },
 
   addItem: async () => {
+    if (state.orcSaving) return;
     const ordem = sel();
     const formulario = state.orcForm;
-    const servico = state.servicos.find(
-      item => String(item.id_servico) === formulario.servicoId
-    );
+    const descricao = formulario.descricao.trim();
     const quantidade = Number(formulario.qtd);
     const custo = moeda(formulario.peca);
     const mao = moeda(formulario.mao);
@@ -111,8 +204,12 @@ const actions = {
       state.orcErr = 'A ordem selecionada não está disponível.';
       return render();
     }
-    if (!servico) {
-      state.orcErr = 'Selecione um serviço cadastrado no catálogo.';
+    if (!descricao) {
+      state.orcErr = 'Informe o serviço que será realizado.';
+      return render();
+    }
+    if (descricao.length > 150) {
+      state.orcErr = 'A descrição do serviço pode ter no máximo 150 caracteres.';
       return render();
     }
     if (!Number.isInteger(quantidade) || quantidade < 1) {
@@ -127,72 +224,145 @@ const actions = {
       state.orcErr = 'Informe o valor da peça, da mão de obra ou dos dois.';
       return render();
     }
-    if (ordem.itens.some(item => item.idServico === formulario.servicoId)) {
+    const descricaoNormalizada = descricao.toLocaleLowerCase('pt-BR');
+    if (ordem.itens.some(item =>
+      item.desc.trim().toLocaleLowerCase('pt-BR') === descricaoNormalizada
+    )) {
       state.orcErr = 'Esse serviço já está no orçamento. Remova-o ou ajuste a quantidade.';
       return render();
     }
 
+    state.orcSaving = true;
+    state.orcErr = '';
+    render();
     try {
       await salvarItensOrcamento(ordem, [
         ...ordem.itens,
         {
-          idServico: formulario.servicoId,
+          desc: descricao,
           qtd: quantidade,
           mao,
           custo
         }
       ]);
       state.orcForm = emptyOrcForm();
-      state.orcErr = '';
-      state.flash = 'Orçamento salvo no banco de dados.';
-      render();
+      state.flash = 'Serviço lançado no orçamento da OS.';
     } catch (erro) {
       state.orcErr = erro.message;
+    } finally {
+      state.orcSaving = false;
       render();
     }
   },
 
   remover: async el => {
+    if (state.orcSaving) return;
     const ordem = sel();
     if (!ordem) return;
     const indice = Number(el.dataset.idx);
     const itens = ordem.itens.filter((_, itemIndice) => itemIndice !== indice);
 
+    state.orcSaving = true;
     try {
       await salvarItensOrcamento(ordem, itens);
       state.orcErr = '';
       state.flash = itens.length
         ? 'Item removido do orçamento.'
         : 'Orçamento removido do banco de dados.';
-      render();
     } catch (erro) {
       state.orcErr = erro.message;
+    } finally {
+      state.orcSaving = false;
+      render();
+    }
+  },
+
+  aprovarOrcamento: async () => {
+    if (state.orcSaving) return;
+    const ordem = sel();
+    if (!ordem || ordem.orc !== 'Pendente' || !ordem.itens.length) return;
+
+    state.orcSaving = true;
+    state.orcErr = '';
+    render();
+    try {
+      const resposta = await apiRequest(`/os/${ordem.id}/orcamento/`, {
+        method: 'PATCH',
+        body: { status: 'Aprovado' }
+      });
+      if (resposta.orcamento?.status !== 'Aprovado') {
+        throw new Error('O servidor não confirmou a aprovação do orçamento.');
+      }
+
+      ordem.orc = resposta.orcamento.status;
+      state.os = state.os.map(item => item.id === ordem.id ? ordem : item);
+      state.flash = 'Aprovação do cliente registrada no orçamento.';
+    } catch (erro) {
+      state.orcErr = erro.message;
+    } finally {
+      state.orcSaving = false;
       render();
     }
   },
 
   login: async () => {
+    if (state.loginLoading) return;
     const username = document.getElementById('lg-user').value.trim();
     const password = document.getElementById('lg-senha').value;
+    if (!username || !password) {
+      state.loginErr = 'Informe o usuário e a senha para entrar.';
+      render();
+      return;
+    }
+
+    state.loginLoading = true;
+    state.loginErr = '';
+    invalidarCarregamentosDeAutenticacao();
+    render();
 
     try {
-      await apiRequest('/login/', {
+      const perfil = await apiRequest('/login/', {
         method: 'POST',
         body: { username, password }
       });
-      await carregarDadosDoTecnico();
+      if (!perfil.tecnico) {
+        throw new Error('O login não retornou o técnico associado à conta.');
+      }
+
+      state.tecnico = perfil.tecnico;
+      state.tecnicos = [perfil.tecnico];
       state.loginErr = '';
       state.apiError = '';
-      go('painel');
-      state.flash = `Login realizado como ${state.tecnico.nome}.`;
-      render();
+
+      try {
+        const carregou = await carregarDadosDoTecnico(perfil);
+        if (!carregou) return;
+        state.screen = 'painel';
+        state.flash = `Login realizado como ${state.tecnico.nome}.`;
+      } catch (erro) {
+        if (erro.status === 401) {
+          state.tecnico = null;
+          state.tecnicos = [];
+          state.os = [];
+          state.servicos = [];
+          state.selId = null;
+          state.screen = 'login';
+          state.loginErr = `A sessão não foi confirmada: ${erro.message}`;
+        } else {
+          state.screen = 'painel';
+          state.apiError = `Login realizado, mas houve falha ao carregar os dados: ${erro.message}`;
+        }
+      }
     } catch (erro) {
       state.loginErr = erro.message;
+    } finally {
+      state.loginLoading = false;
       render();
     }
   },
 
   logout: async () => {
+    invalidarCarregamentosDeAutenticacao();
     try {
       await apiRequest('/logout/', { method: 'POST' });
       state.tecnico = null;

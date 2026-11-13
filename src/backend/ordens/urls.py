@@ -7,6 +7,11 @@ urlpatterns = [
     path("login/", views.api_login, name="api_login"),
     path("me/", views.api_me, name="api_me"),
     path("logout/", views.api_logout, name="api_logout"),
+    path(
+        "portal/solicitacoes/",
+        views.solicitar_os_portal,
+        name="solicitar_os_portal",
+    ),
     path("servicos/", views.listar_servicos, name="listar_servicos"),
     path(
         "os/<int:os_id>/orcamento/",
