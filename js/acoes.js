@@ -78,9 +78,9 @@ const actions = {
     const p = state.portal;
     if (![p.nome, p.cpf, p.equip, p.defeito].every(v => v.trim())) { state.pErr = 'Preencha nome, CPF, equipamento e a descrição do defeito.'; return render(); }
     if (!p.hora) { state.pErr = 'Escolha o horário em que você vai trazer o aparelho.'; return render(); }
-    const t = TECHS.find(tt => !busy(tt, p.data, p.hora));
+    const t = tecnicosNomes().find(tt => !busy(tt, p.data, p.hora));
     if (!t) {
-      const alt = HORAS.filter(h => TECHS.some(tt => !busy(tt, p.data, h)));
+      const alt = HORAS.filter(h => tecnicosNomes().some(tt => !busy(tt, p.data, h)));
       state.pErr = 'Nenhum técnico livre nesse horário. Horários com vaga nesse dia: ' + alt.join(', ') + '.';
       return render();
     }

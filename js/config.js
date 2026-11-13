@@ -1,7 +1,6 @@
 
 
 const TODAY = '2026-10-08'; 
-const TECHS = ['João Pedro', 'Marina Alves', 'Rafael Costa'];
 const HORAS = ['08:00','09:00','10:00','11:00','13:00','14:00','15:00','16:00','17:00'];
 const DIAS = ['2026-10-08','2026-10-09','2026-10-12','2026-10-13','2026-10-14'];
 const SERVICOS = ['Formatação','Backup completo','Upgrade de SO','Manutenção geral','Diagnóstico'];

@@ -3,6 +3,8 @@
 const state = {
   screen: 'login',          // login | portal | painel | ordens | nova | detalhe | agenda
   os: OS_EXEMPLO,           // depois: preenchido com GET /api/os
+  tecnicos: [],
+  apiError: '',
   selId: 'os1245',          // OS aberta na tela de detalhe
   form: emptyForm(), formErr: '',                       // Nova OS
   portal: emptyPortal(), pErr: '', portalDone: null,    // Portal do cliente
@@ -11,6 +13,7 @@ const state = {
   orcForm: emptyOrcForm(), orcErr: '', servDia: null    // Pré-orçamento
 };
 
+const tecnicosNomes = () => state.tecnicos.map(tecnico => tecnico.nome);
 const sel = () => state.os.find(o => o.id === state.selId) || state.os[0];
 const updateSel = fn => { state.os = state.os.map(o => o.id === state.selId ? fn(o) : o); };
 

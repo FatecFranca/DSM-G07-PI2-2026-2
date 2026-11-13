@@ -19,6 +19,7 @@ function viewApp() {
       <header class="topbar"><h1>${TITLES[state.screen]}</h1><div class="user"><div class="avatar">MM</div>Mateus Morgan · Atendente</div></header>
       <div class="page">
         ${state.flash ? `<div role="status" class="alert-ok"><span>${esc(state.flash)}</span><button type="button" aria-label="Fechar aviso" data-action="closeFlash" style="min-width:36px;min-height:36px;border:0;background:transparent;color:#065F46;font-size:18px">×</button></div>` : ''}
+        ${state.apiError ? `<div role="alert" class="alert alert-err">${esc(state.apiError)}</div>` : ''}
         ${VIEWS[state.screen]()}
       </div>
     </main>

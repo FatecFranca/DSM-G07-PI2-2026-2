@@ -3,9 +3,11 @@
 function viewNova() {
   const f = state.form;
   const livres = HORAS.filter(h => !busy(f.tecnico, f.data, h));
+  const nomesTecnicos = state.tecnicos.map(tecnico => tecnico.nome);
   return `<div class="row">
     <section class="card stack" style="flex:999 1 520px;min-width:0;padding:24px">
       <h2 style="margin:0;font-size:18px">Registro de O.S.</h2>
+      ${state.apiError ? `<div role="alert" class="alert alert-err">${esc(state.apiError)}</div>` : ''}
       <div class="grid-auto">
         ${input('n-cli', 'Nome do cliente', 'form', 'cliente')}
         ${input('n-cpf', 'CPF do proprietário', 'form', 'cpf', 'placeholder="000.000.000-00"')}
@@ -18,7 +20,7 @@ function viewNova() {
         <h3 style="margin:0;font-size:15px">Entrega do aparelho para diagnóstico</h3>
         <p class="hint" style="margin:0;font-size:13px">A data para realizar o serviço é definida depois, no pré-orçamento.</p>
         <div class="grid-auto" style="grid-template-columns:repeat(auto-fit,minmax(180px,1fr))">
-          ${selectF('n-tec', 'Técnico', 'form', 'tecnico', TECHS)}
+          ${selectF('n-tec', 'Técnico', 'form', 'tecnico', nomesTecnicos)}
           ${selectF('n-dt', 'Data', 'form', 'data', DIAS, curto)}
           ${selectF('n-hr', 'Horário', 'form', 'hora', HORAS)}
         </div>

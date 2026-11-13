@@ -136,6 +136,7 @@ CREATE TABLE aparelho (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
+USE assistencia_tecnica;
 show tables;
 
 -- USUÁRIO BACKEND--

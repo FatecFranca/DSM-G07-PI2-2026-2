@@ -37,13 +37,13 @@ function viewPortal() {
     <div class="portal-head">
       <div class="mono" style="font-size:22px;font-weight:600">TechManager <span style="font-family:'IBM Plex Sans';font-size:14px;font-weight:500;color:var(--muted)">· Portal do Cliente</span></div>
       <button type="button" class="btn btn-ghost" data-action="go" data-to="login">Voltar ao login</button>
-    </div>${body}</div></div>`;
+    </div>${state.apiError ? `<div role="alert" class="alert alert-err">${esc(state.apiError)}</div>` : ''}${body}</div></div>`;
 }
 
 /* O cliente vê os horários livres e escolhe quando trazer o aparelho */
 function horariosPortal() {
   const p = state.portal;
-  const livres = HORAS.filter(h => (p.data > TODAY || h > '13:30') && TECHS.some(t => !busy(t, p.data, h)));
+  const livres = HORAS.filter(h => (p.data > TODAY || h > '13:30') && tecnicosNomes().some(t => !busy(t, p.data, h)));
   return `<div class="stack" style="gap:10px;padding:16px;border:1px solid var(--line);border-radius:10px;background:var(--field)">
     <span class="lbl" style="font-size:14px">Quando você pode trazer o aparelho para o diagnóstico?</span>
     <div class="slots">${DIAS.map(d => `<button type="button" class="chip${p.data === d ? ' on' : ''}" data-action="portalDia" data-d="${d}">${curto(d)}</button>`).join('')}</div>

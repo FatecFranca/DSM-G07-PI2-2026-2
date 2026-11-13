@@ -6,6 +6,7 @@
 #   * Remove `managed = False` lines if you wish to allow Django to create, modify, and delete the table
 # Feel free to rename the models, but don't rename db_table values or field names.
 from django.db import models
+from django.conf import settings
 
 
 class Cliente(models.Model):
@@ -111,3 +112,21 @@ class Aparelho(models.Model):
     class Meta:
         managed = False
         db_table = 'aparelho'
+
+## Ddjango model usaado AUTH_USER_MODEL para lógica de login
+## e authentication, mas não é usado para o relacionamento com o modelo Cliente.
+class ContaTecnico(models.Model):
+    tecnico = models.OneToOneField(
+        Tecnico,
+        on_delete=models.PROTECT,
+        db_column="id_tecnico",
+        related_name="conta",
+    )
+    usuario = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="conta_tecnico",
+    )
+
+    class Meta:
+        db_table = "ordens_conta_tecnico"
