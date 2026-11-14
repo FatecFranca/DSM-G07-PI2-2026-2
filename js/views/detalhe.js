@@ -7,7 +7,15 @@ function viewDetalhe() {
     </section>`;
   }
 
-  const editavel = ordem.orc === 'Sem orçamento' || ordem.orc === 'Pendente';
+  const editavel = ['Sem orçamento', 'Pendente', 'Recusado'].includes(ordem.orc);
+  const proximosStatus = {
+    'Aguardando triagem': ['Cancelado'],
+    'Aguardando aprovação': ['Cancelado'],
+    'Agendado': ['Em andamento', 'Cancelado'],
+    'Em andamento': ['Concluído', 'Cancelado'],
+    'Concluído': [],
+    'Cancelado': []
+  }[ordem.status] || [];
   const agendamentos = ordem.agendamentos.length
     ? ordem.agendamentos.map(agendamento => `<div class="ref">
         <b>${fmt(agendamento.data)} às ${agendamento.hora}</b>
@@ -23,6 +31,20 @@ function viewDetalhe() {
   </div>
   <div class="row">
     <div class="main-col">
+      <section class="card stack">
+        <h2 style="margin:0">Andamento do conserto</h2>
+        <div>${pill(ordem.status, STATUS_CLASS[ordem.status] || 's-triagem')}</div>
+        ${proximosStatus.length ? `<div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
+          <div class="field" style="min-width:220px">
+            <label for="status-os">Atualizar andamento</label>
+            <select id="status-os">${opts(proximosStatus, proximosStatus[0])}</select>
+          </div>
+          <button type="button" class="btn btn-primary" data-action="salvarStatusOS"${state.statusSaving ? ' disabled aria-busy="true"' : ''}>
+            ${state.statusSaving ? 'Salvando...' : 'Salvar andamento'}
+          </button>
+        </div>` : '<p class="sub">Esta ordem foi encerrada.</p>'}
+        ${state.statusErr ? `<div role="alert" class="alert alert-err">${esc(state.statusErr)}</div>` : ''}
+      </section>
       <section class="card stack">
         <h2 style="margin:0">Dados registrados</h2>
         <div class="info">
@@ -49,11 +71,6 @@ function viewDetalhe() {
           <h2 style="margin:0">Orçamento</h2>
           <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap">
             ${pill(ordem.orc, ORC_CLASS[ordem.orc] || 's-triagem')}
-            ${ordem.orc === 'Pendente' && ordem.itens.length
-              ? `<button type="button" class="btn btn-ok" data-action="aprovarOrcamento"${state.orcSaving ? ' disabled aria-busy="true"' : ''}>
-                  ${state.orcSaving ? 'Salvando...' : 'Registrar aprovação do cliente'}
-                </button>`
-              : ''}
           </div>
         </div>
         ${ordem.itens.length ? `<div class="scroll">
@@ -70,7 +87,7 @@ function viewDetalhe() {
             <span style="color:var(--muted)">Total</span><b>${brl(totalOf(ordem))}</b>
           </div>
         </div>` : '<p class="sub">Nenhum item de orçamento registrado.</p>'}
-        ${editavel ? formOrcamento() : '<p class="hint">Este orçamento não está pendente. A interface não altera respostas registradas fora deste fluxo.</p>'}
+        ${editavel ? formOrcamento() : '<p class="hint">A resposta ao orçamento é registrada pelo cliente na área do cliente.</p>'}
         ${state.orcErr ? `<div role="alert" class="alert alert-err">${esc(state.orcErr)}</div>` : ''}
       </section>
     </div>

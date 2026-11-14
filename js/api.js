@@ -122,6 +122,7 @@ function normalizarOrdem(ordem) {
   return {
     id: String(ordem.id),
     numero: ordem.numero_os,
+    status: ordem.status || 'Aguardando triagem',
     cliente: ordem.cliente?.nome_completo || '',
     cpf: ordem.cliente?.cpf || '',
     telefone: ordem.cliente?.telefone || '',

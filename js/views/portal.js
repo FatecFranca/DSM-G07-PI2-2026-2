@@ -57,6 +57,11 @@ function viewPortal() {
     <div class="portal-in">
       <header class="portal-head">
         <div class="mono" style="font-size:22px;font-weight:600">TechManager <span style="font-family:'IBM Plex Sans';font-size:14px;font-weight:500;color:var(--muted)">· Portal do Cliente</span></div>
+        <div style="display:flex;gap:8px;flex-wrap:wrap">
+          ${state.cliente
+            ? '<button type="button" class="btn btn-ghost" data-action="voltarPortal">Minha área</button>'
+            : '<button type="button" class="btn btn-ghost" data-action="abrirLoginCliente">Entrar</button><button type="button" class="btn btn-primary" data-action="abrirCadastroCliente">Criar conta</button>'}
+        </div>
       </header>
       ${conteudo}
     </div>

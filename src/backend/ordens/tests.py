@@ -79,6 +79,8 @@ class OrcamentoEndpointTests(SimpleTestCase):
             patch("ordens.views._resolver_servico_orcamento", return_value=servico) as resolver_servico,
             patch("ordens.views.ItemServico.objects.filter") as filtrar_itens,
             patch("ordens.views.ItemServico.objects.bulk_create") as criar_itens,
+            patch("ordens.views.AcompanhamentoOrdem.objects.update_or_create"),
+            patch("ordens.views._status_ordem", return_value="Aguardando triagem"),
             patch("ordens.views.transaction.atomic", return_value=nullcontext()),
             patch("ordens.views._dados_orcamento", return_value={"id": 11, "itens": []}),
         ):
@@ -96,18 +98,33 @@ class OrcamentoEndpointTests(SimpleTestCase):
         filtrar_itens.return_value.delete.assert_called_once_with()
         criar_itens.assert_called_once()
 
-    def test_patch_registra_aprovacao_do_orcamento_pendente(self):
-        tecnico = SimpleNamespace(id_tecnico=7)
-        ordem = SimpleNamespace(id_ordem_servico=42, id_tecnico=tecnico)
-        orcamento = views.Orcamento(id_orcamento=11, status="Pendente")
+    def test_tecnico_nao_pode_registrar_aprovacao_do_cliente(self):
         request = self.factory.patch(
             "/api/os/42/orcamento/",
             data=json.dumps({"status": "Aprovado"}),
             content_type="application/json",
         )
+        resposta = views.orcamento_os(request, os_id=42)
+
+        self.assertEqual(resposta.status_code, 405)
+
+
+class RespostaOrcamentoClienteTests(SimpleTestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_cliente_pode_aprovar_orcamento_da_propria_ordem(self):
+        cliente = SimpleNamespace(id_cliente=5)
+        ordem = SimpleNamespace(id_ordem_servico=42, id_tecnico=SimpleNamespace())
+        orcamento = views.Orcamento(id_orcamento=11, status="Pendente")
+        request = self.factory.post(
+            "/api/cliente/os/42/orcamento/",
+            data=json.dumps({"status": "Aprovado"}),
+            content_type="application/json",
+        )
         request.user = SimpleNamespace(
             is_authenticated=True,
-            conta_tecnico=SimpleNamespace(tecnico=tecnico),
+            conta_cliente=SimpleNamespace(cliente=cliente),
         )
 
         with (
@@ -115,29 +132,109 @@ class OrcamentoEndpointTests(SimpleTestCase):
             patch("ordens.views.Orcamento.objects.filter") as filtrar_orcamento,
             patch("ordens.views.ItemServico.objects.filter") as filtrar_itens,
             patch("ordens.views.Orcamento.save") as salvar_orcamento,
+            patch("ordens.views.AcompanhamentoOrdem.objects.update_or_create") as atualizar_status,
+            patch("ordens.views.transaction.atomic", return_value=nullcontext()),
             patch(
                 "ordens.views._dados_orcamento",
-                side_effect=lambda atual: {"status": atual.status, "itens": [{}]},
+                return_value={"status": "Aprovado", "itens": [{}]},
             ),
+            patch("ordens.views._status_ordem", return_value="Agendado"),
         ):
-            filtrar_ordem.return_value.first.return_value = ordem
+            filtrar_ordem.return_value.select_related.return_value.first.return_value = ordem
             filtrar_orcamento.return_value.first.return_value = orcamento
             filtrar_itens.return_value.exists.return_value = True
 
-            resposta = views.orcamento_os(request, os_id=42)
+            resposta = views.responder_orcamento_cliente(request, os_id=42)
 
         self.assertEqual(resposta.status_code, 200)
         self.assertEqual(orcamento.status, "Aprovado")
         salvar_orcamento.assert_called_once_with(update_fields=["status"])
-        self.assertEqual(json.loads(resposta.content)["orcamento"]["status"], "Aprovado")
+        atualizar_status.assert_called_once_with(
+            ordem_servico=ordem,
+            defaults={"status": "Agendado"},
+        )
 
-    def test_patch_impede_aprovar_orcamento_sem_itens(self):
+    def test_cliente_nao_pode_responder_ordem_de_outra_pessoa(self):
+        cliente = SimpleNamespace(id_cliente=5)
+        request = self.factory.post(
+            "/api/cliente/os/42/orcamento/",
+            data=json.dumps({"status": "Recusado"}),
+            content_type="application/json",
+        )
+        request.user = SimpleNamespace(
+            is_authenticated=True,
+            conta_cliente=SimpleNamespace(cliente=cliente),
+        )
+
+        with (
+            patch("ordens.views.OrdemServico.objects.filter") as filtrar_ordem,
+            patch("ordens.views.Orcamento.objects.filter") as filtrar_orcamento,
+        ):
+            filtrar_ordem.return_value.select_related.return_value.first.return_value = None
+
+            resposta = views.responder_orcamento_cliente(request, os_id=42)
+
+        self.assertEqual(resposta.status_code, 404)
+        filtrar_orcamento.assert_not_called()
+
+    def test_orcamento_so_pode_ser_respondido_uma_vez(self):
+        cliente = SimpleNamespace(id_cliente=5)
+        ordem = SimpleNamespace(id_ordem_servico=42, id_tecnico=SimpleNamespace())
+        orcamento = SimpleNamespace(id_orcamento=11, status="Aprovado")
+        request = self.factory.post(
+            "/api/cliente/os/42/orcamento/",
+            data=json.dumps({"status": "Recusado"}),
+            content_type="application/json",
+        )
+        request.user = SimpleNamespace(
+            is_authenticated=True,
+            conta_cliente=SimpleNamespace(cliente=cliente),
+        )
+
+        with (
+            patch("ordens.views.OrdemServico.objects.filter") as filtrar_ordem,
+            patch("ordens.views.Orcamento.objects.filter") as filtrar_orcamento,
+        ):
+            filtrar_ordem.return_value.select_related.return_value.first.return_value = ordem
+            filtrar_orcamento.return_value.first.return_value = orcamento
+
+            resposta = views.responder_orcamento_cliente(request, os_id=42)
+
+        self.assertEqual(resposta.status_code, 409)
+
+
+class CadastroClienteTests(SimpleTestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_rejeita_confirmacao_de_senha_diferente(self):
+        request = self.factory.post(
+            "/api/cliente/cadastro/",
+            data=json.dumps({
+                "email": "cliente@example.com",
+                "password": "StrongPassword123!",
+                "password_confirm": "OtherPassword123!",
+                "cliente": {},
+            }),
+            content_type="application/json",
+        )
+
+        resposta = views.api_cliente_cadastro(request)
+
+        self.assertEqual(resposta.status_code, 400)
+        self.assertIn("confirmação da senha", json.loads(resposta.content)["erro"])
+
+
+class StatusOrdemTests(SimpleTestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_tecnico_nao_inicia_reparo_sem_orcamento_aprovado(self):
         tecnico = SimpleNamespace(id_tecnico=7)
         ordem = SimpleNamespace(id_ordem_servico=42, id_tecnico=tecnico)
-        orcamento = views.Orcamento(id_orcamento=11, status="Pendente")
         request = self.factory.patch(
-            "/api/os/42/orcamento/",
-            data=json.dumps({"status": "Aprovado"}),
+            "/api/os/42/status/",
+            data=json.dumps({"status": "Em andamento"}),
             content_type="application/json",
         )
         request.user = SimpleNamespace(
@@ -148,17 +245,16 @@ class OrcamentoEndpointTests(SimpleTestCase):
         with (
             patch("ordens.views.OrdemServico.objects.filter") as filtrar_ordem,
             patch("ordens.views.Orcamento.objects.filter") as filtrar_orcamento,
-            patch("ordens.views.ItemServico.objects.filter") as filtrar_itens,
-            patch("ordens.views.Orcamento.save") as salvar_orcamento,
+            patch("ordens.views.AcompanhamentoOrdem.objects.update_or_create") as atualizar_status,
+            patch("ordens.views._status_ordem", return_value="Agendado"),
         ):
             filtrar_ordem.return_value.first.return_value = ordem
-            filtrar_orcamento.return_value.first.return_value = orcamento
-            filtrar_itens.return_value.exists.return_value = False
+            filtrar_orcamento.return_value.first.return_value = SimpleNamespace(status="Pendente")
 
-            resposta = views.orcamento_os(request, os_id=42)
+            resposta = views.atualizar_status_os(request, os_id=42)
 
         self.assertEqual(resposta.status_code, 409)
-        salvar_orcamento.assert_not_called()
+        atualizar_status.assert_not_called()
 
 
 class ValorMonetarioTests(SimpleTestCase):

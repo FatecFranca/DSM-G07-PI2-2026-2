@@ -4,18 +4,23 @@ import uuid
 from decimal import Decimal, InvalidOperation
 
 from django.conf import settings
-from django.contrib.auth import authenticate, login, logout
+from django.contrib.auth import authenticate, get_user_model, login, logout
 from django.contrib.auth.hashers import make_password
-from django.db import transaction
+from django.contrib.auth.password_validation import validate_password
+from django.core.exceptions import ValidationError
+from django.core.validators import validate_email
+from django.db import IntegrityError, transaction
 from django.http import HttpResponse, JsonResponse
 from django.utils import timezone
 from django.utils.dateparse import parse_datetime
 from django.views.decorators.csrf import ensure_csrf_cookie
 from django.views.decorators.http import require_GET, require_POST, require_http_methods
 from .models import (
+    AcompanhamentoOrdem,
     Agendamento,
     Aparelho,
     Cliente,
+    ContaCliente,
     ContaTecnico,
     ItemServico,
     Orcamento,
@@ -24,6 +29,16 @@ from .models import (
     Servico,
     Tecnico,
 )
+
+STATUS_INICIAL_OS = "Aguardando triagem"
+TRANSICOES_STATUS_OS = {
+    "Aguardando triagem": {"Cancelado"},
+    "Aguardando aprovação": {"Cancelado"},
+    "Agendado": {"Em andamento", "Cancelado"},
+    "Em andamento": {"Concluído", "Cancelado"},
+    "Concluído": set(),
+    "Cancelado": set(),
+}
 
 
 class _ServicoDuplicadoNoOrcamento(Exception):
@@ -64,6 +79,12 @@ def api_login(request):
         vinculo = usuario.conta_tecnico
     except ContaTecnico.DoesNotExist:
         return JsonResponse({"erro": "Esta conta não está vinculada a um técnico."}, status=403)
+    try:
+        usuario.conta_cliente
+    except ContaCliente.DoesNotExist:
+        pass
+    else:
+        return JsonResponse({"erro": "Esta conta possui mais de um perfil."}, status=403)
 
     login(request, usuario)
 
@@ -76,22 +97,216 @@ def api_login(request):
     })
 
 
+def _json_objeto(request):
+    try:
+        dados = json.loads(request.body)
+    except (json.JSONDecodeError, UnicodeDecodeError):
+        return None, JsonResponse({"erro": "JSON inválido."}, status=400)
+    if not isinstance(dados, dict):
+        return None, JsonResponse({"erro": "Envie um objeto JSON."}, status=400)
+    return dados, None
+
+
+def _dados_cliente(cliente, email):
+    return {
+        "id": cliente.id_cliente,
+        "nome": cliente.nome_completo,
+        "email": email,
+    }
+
+
+@require_POST
+def api_cliente_cadastro(request):
+    dados, erro = _json_objeto(request)
+    if erro:
+        return erro
+
+    email = dados.get("email")
+    senha = dados.get("password")
+    confirmacao = dados.get("password_confirm")
+    cliente_dados = dados.get("cliente")
+    if not all(isinstance(valor, str) for valor in (email, senha, confirmacao)):
+        return JsonResponse(
+            {"erro": "E-mail, senha e confirmação de senha são obrigatórios."},
+            status=400,
+        )
+    if not isinstance(cliente_dados, dict):
+        return JsonResponse({"erro": "Informe os dados do cliente."}, status=400)
+
+    email = email.strip().lower()
+    if len(email) > 150:
+        return JsonResponse({"erro": "O e-mail pode ter no máximo 150 caracteres."}, status=400)
+    try:
+        validate_email(email)
+    except ValidationError:
+        return JsonResponse({"erro": "Informe um e-mail válido."}, status=400)
+    if senha != confirmacao:
+        return JsonResponse({"erro": "A confirmação da senha não confere."}, status=400)
+
+    campos_obrigatorios = (
+        "nome_completo",
+        "cpf",
+        "telefone",
+        "cep",
+        "numero",
+        "bairro",
+        "rua",
+        "cidade",
+        "estado",
+    )
+    if any(
+        not isinstance(cliente_dados.get(campo), str)
+        or not cliente_dados[campo].strip()
+        for campo in campos_obrigatorios
+    ):
+        return JsonResponse(
+            {"erro": "Preencha todos os dados obrigatórios do cliente."},
+            status=400,
+        )
+
+    cpf = "".join(caractere for caractere in cliente_dados["cpf"] if caractere.isdigit())
+    cep = "".join(caractere for caractere in cliente_dados["cep"] if caractere.isdigit())
+    estado = cliente_dados["estado"].strip().upper()
+    if len(cpf) != 11:
+        return JsonResponse({"erro": "O CPF precisa ter 11 dígitos."}, status=400)
+    if len(cep) != 8:
+        return JsonResponse({"erro": "O CEP precisa ter 8 dígitos."}, status=400)
+    if len(estado) != 2:
+        return JsonResponse({"erro": "O estado deve ter a sigla de dois caracteres."}, status=400)
+
+    limites = {
+        "nome_completo": 120,
+        "telefone": 20,
+        "numero": 10,
+        "bairro": 80,
+        "rua": 150,
+        "cidade": 80,
+        "referencia": 150,
+    }
+    for campo, limite in limites.items():
+        valor = cliente_dados.get(campo, "")
+        if not isinstance(valor, str) or len(valor.strip()) > limite:
+            return JsonResponse(
+                {"erro": f"O campo {campo} pode ter no máximo {limite} caracteres."},
+                status=400,
+            )
+
+    referencia = cliente_dados.get("referencia", "").strip()
+    User = get_user_model()
+    usuario = User(
+        username=email,
+        email=email,
+        first_name=cliente_dados["nome_completo"].strip()[:150],
+    )
+    try:
+        validate_password(senha, user=usuario)
+    except ValidationError as exc:
+        return JsonResponse({"erro": " ".join(exc.messages)}, status=400)
+
+    if User.objects.filter(email__iexact=email).exists():
+        return JsonResponse({"erro": "Este e-mail já possui uma conta."}, status=409)
+    if Cliente.objects.filter(cpf=cpf).exists():
+        return JsonResponse(
+            {"erro": "Este CPF já está cadastrado. Peça ao técnico para ativar seu acesso."},
+            status=409,
+        )
+
+    usuario.set_password(senha)
+    try:
+        with transaction.atomic():
+            usuario.save()
+            cliente = Cliente.objects.create(
+                nome_completo=cliente_dados["nome_completo"].strip(),
+                cpf=cpf,
+                senha=make_password(secrets.token_urlsafe(32)),
+                telefone=cliente_dados["telefone"].strip(),
+                cep=cep,
+                numero=cliente_dados["numero"].strip(),
+                bairro=cliente_dados["bairro"].strip(),
+                rua=cliente_dados["rua"].strip(),
+                cidade=cliente_dados["cidade"].strip(),
+                referencia=referencia or None,
+                estado=estado,
+            )
+            ContaCliente.objects.create(cliente=cliente, usuario=usuario)
+    except IntegrityError:
+        return JsonResponse(
+            {"erro": "Já existe um cadastro com este e-mail ou CPF."},
+            status=409,
+        )
+
+    login(request, usuario)
+    return JsonResponse(
+        {"perfil": "cliente", "cliente": _dados_cliente(cliente, email)},
+        status=201,
+    )
+
+
+@require_POST
+def api_cliente_login(request):
+    dados, erro = _json_objeto(request)
+    if erro:
+        return erro
+    email = dados.get("email")
+    senha = dados.get("password")
+    if not isinstance(email, str) or not isinstance(senha, str):
+        return JsonResponse({"erro": "E-mail e senha são obrigatórios."}, status=400)
+
+    usuario = authenticate(
+        request,
+        username=email.strip().lower(),
+        password=senha,
+    )
+    if usuario is None:
+        return JsonResponse({"erro": "E-mail ou senha inválidos."}, status=401)
+    try:
+        cliente = usuario.conta_cliente.cliente
+    except ContaCliente.DoesNotExist:
+        return JsonResponse({"erro": "Esta conta não está vinculada a um cliente."}, status=403)
+    try:
+        usuario.conta_tecnico
+    except ContaTecnico.DoesNotExist:
+        pass
+    else:
+        return JsonResponse({"erro": "Esta conta possui mais de um perfil."}, status=403)
+
+    login(request, usuario)
+    return JsonResponse({
+        "perfil": "cliente",
+        "cliente": _dados_cliente(cliente, usuario.email),
+    })
+
+
 @require_GET
 def api_me(request):
     if not request.user.is_authenticated:
         return JsonResponse({"erro": "Login necessário."}, status=401)
 
     try:
-        tecnico = request.user.conta_tecnico.tecnico
+        conta_cliente = request.user.conta_cliente
+    except ContaCliente.DoesNotExist:
+        conta_cliente = None
+    try:
+        conta_tecnico = request.user.conta_tecnico
     except ContaTecnico.DoesNotExist:
-        return JsonResponse({"erro": "Conta sem técnico vinculado."}, status=403)
+        conta_tecnico = None
 
+    if bool(conta_cliente) == bool(conta_tecnico):
+        return JsonResponse({"erro": "A conta não possui um perfil único."}, status=403)
+    if conta_cliente:
+        return JsonResponse({
+            "perfil": "cliente",
+            "cliente": _dados_cliente(conta_cliente.cliente, request.user.email),
+        })
+
+    tecnico = conta_tecnico.tecnico
     return JsonResponse({
+        "perfil": "tecnico",
         "tecnico": {
             "id": tecnico.id_tecnico,
             "nome": tecnico.nome,
             "nivel": tecnico.nivel,
-        }
+        },
     })
 
 
@@ -287,21 +502,34 @@ def _registrar_os(request, tecnico, resposta_publica=False):
     )
 
     with transaction.atomic():
-        cliente, cliente_novo = Cliente.objects.get_or_create(
-            cpf=cpf,
-            defaults={
-                "nome_completo": cliente_dados["nome_completo"].strip(),
-                "senha": make_password(secrets.token_urlsafe(32)),
-                "telefone": cliente_dados["telefone"].strip(),
-                "cep": cep,
-                "numero": cliente_dados["numero"].strip(),
-                "bairro": cliente_dados["bairro"].strip(),
-                "rua": cliente_dados["rua"].strip(),
-                "cidade": cliente_dados["cidade"].strip(),
-                "referencia": referencia.strip() or None,
-                "estado": estado,
-            },
-        )
+        try:
+            cliente_autenticado = request.user.conta_cliente.cliente
+        except (AttributeError, ContaCliente.DoesNotExist):
+            cliente_autenticado = None
+
+        if cliente_autenticado:
+            if cpf != cliente_autenticado.cpf:
+                return JsonResponse(
+                    {"erro": "Uma conta de cliente só pode solicitar atendimento para seu próprio cadastro."},
+                    status=403,
+                )
+            cliente, cliente_novo = cliente_autenticado, False
+        else:
+            cliente, cliente_novo = Cliente.objects.get_or_create(
+                cpf=cpf,
+                defaults={
+                    "nome_completo": cliente_dados["nome_completo"].strip(),
+                    "senha": make_password(secrets.token_urlsafe(32)),
+                    "telefone": cliente_dados["telefone"].strip(),
+                    "cep": cep,
+                    "numero": cliente_dados["numero"].strip(),
+                    "bairro": cliente_dados["bairro"].strip(),
+                    "rua": cliente_dados["rua"].strip(),
+                    "cidade": cliente_dados["cidade"].strip(),
+                    "referencia": referencia.strip() or None,
+                    "estado": estado,
+                },
+            )
 
         numero_os = f"OS-{uuid.uuid4().hex[:16]}"
 
@@ -309,6 +537,10 @@ def _registrar_os(request, tecnico, resposta_publica=False):
             numero_os=numero_os,
             id_cliente=cliente,
             id_tecnico=tecnico,
+        )
+        AcompanhamentoOrdem.objects.create(
+            ordem_servico=ordem,
+            status=STATUS_INICIAL_OS,
         )
 
         aparelho = Aparelho.objects.create(
@@ -420,6 +652,7 @@ def listar_os(request):
         resultado.append({
             "id": ordem.id_ordem_servico,
             "numero_os": ordem.numero_os,
+            "status": _status_ordem(ordem, orcamento),
             "cliente": {
                 "id": cliente.id_cliente,
                 "nome_completo": cliente.nome_completo,
@@ -445,6 +678,201 @@ def listar_os(request):
         })
 
     return JsonResponse({"ordens": resultado})
+
+
+def _status_ordem(ordem, orcamento=None):
+    status = AcompanhamentoOrdem.objects.filter(
+        ordem_servico=ordem
+    ).values_list("status", flat=True).first()
+    if status:
+        return status
+    if orcamento and orcamento.status in {"Pendente", "Recusado"}:
+        return "Aguardando aprovação"
+    if orcamento and orcamento.status == "Aprovado":
+        return "Agendado"
+    return STATUS_INICIAL_OS
+
+
+@require_GET
+def ordens_cliente(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"erro": "Faça login para consultar suas ordens."}, status=401)
+    try:
+        cliente = request.user.conta_cliente.cliente
+    except ContaCliente.DoesNotExist:
+        return JsonResponse({"erro": "Esta conta não está vinculada a um cliente."}, status=403)
+
+    ordens = (
+        OrdemServico.objects
+        .filter(id_cliente=cliente)
+        .select_related("id_cliente", "id_tecnico")
+        .order_by("-id_ordem_servico")
+    )
+    resultado = []
+    for ordem in ordens:
+        aparelho = Aparelho.objects.filter(id_ordem_servico=ordem).first()
+        vinculos = (
+            OsAgendamento.objects
+            .filter(id_ordem_servico=ordem)
+            .select_related("id_agendamento")
+        )
+        agendamentos = [
+            {
+                "id": vinculo.id_agendamento.id_agendamento,
+                "data": vinculo.id_agendamento.data.isoformat(),
+                "buscar": bool(vinculo.id_agendamento.buscar),
+                "status": vinculo.id_agendamento.status,
+            }
+            for vinculo in vinculos
+        ]
+        orcamento = Orcamento.objects.filter(id_ordem_servico=ordem).first()
+        itens = []
+        if orcamento:
+            itens = [
+                {
+                    "id_servico": item.id_servico_id,
+                    "descricao": item.id_servico.descricao,
+                    "quantidade": item.quantidade,
+                    "mao_de_obra": str(item.mao_de_obra),
+                    "custo_item": str(item.custo_item),
+                }
+                for item in (
+                    ItemServico.objects
+                    .filter(id_orcamento=orcamento)
+                    .select_related("id_servico")
+                )
+            ]
+        resultado.append({
+            "id": ordem.id_ordem_servico,
+            "numero_os": ordem.numero_os,
+            "status": _status_ordem(ordem, orcamento),
+            "cliente": {
+                "id": cliente.id_cliente,
+                "nome_completo": cliente.nome_completo,
+                "cpf": cliente.cpf,
+                "telefone": cliente.telefone,
+            },
+            "tecnico": {
+                "id": ordem.id_tecnico.id_tecnico,
+                "nome": ordem.id_tecnico.nome,
+                "nivel": ordem.id_tecnico.nivel,
+            },
+            "aparelho": None if aparelho is None else {
+                "id": aparelho.id_aparelho,
+                "numero_serie": aparelho.numero_serie,
+                "observacao": aparelho.observacao,
+            },
+            "agendamentos": agendamentos,
+            "orcamento": None if orcamento is None else {
+                "id": orcamento.id_orcamento,
+                "status": orcamento.status,
+                "itens": itens,
+            },
+        })
+    return JsonResponse({"ordens": resultado})
+
+
+@require_POST
+def responder_orcamento_cliente(request, os_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"erro": "Faça login para responder ao orçamento."}, status=401)
+    try:
+        cliente = request.user.conta_cliente.cliente
+    except ContaCliente.DoesNotExist:
+        return JsonResponse({"erro": "Esta conta não está vinculada a um cliente."}, status=403)
+
+    dados, erro = _json_objeto(request)
+    if erro:
+        return erro
+    resposta = dados.get("status")
+    if not isinstance(resposta, str) or resposta not in {"Aprovado", "Recusado"}:
+        return JsonResponse(
+            {"erro": "A resposta deve ser 'Aprovado' ou 'Recusado'."},
+            status=400,
+        )
+
+    ordem = OrdemServico.objects.filter(
+        id_ordem_servico=os_id,
+        id_cliente=cliente,
+    ).select_related("id_tecnico").first()
+    if ordem is None:
+        return JsonResponse({"erro": "Ordem de serviço não encontrada."}, status=404)
+    orcamento = Orcamento.objects.filter(id_ordem_servico=ordem).first()
+    if orcamento is None:
+        return JsonResponse({"erro": "Esta ordem ainda não possui orçamento."}, status=404)
+    if orcamento.status != "Pendente":
+        return JsonResponse(
+            {"erro": "Só é possível responder a um orçamento pendente."},
+            status=409,
+        )
+    if _status_ordem(ordem, orcamento) in {"Concluído", "Cancelado"}:
+        return JsonResponse(
+            {"erro": "Esta ordem de serviço já foi encerrada."},
+            status=409,
+        )
+    if not ItemServico.objects.filter(id_orcamento=orcamento).exists():
+        return JsonResponse({"erro": "O orçamento ainda não possui itens."}, status=409)
+
+    with transaction.atomic():
+        orcamento.status = resposta
+        orcamento.save(update_fields=["status"])
+        if resposta == "Aprovado":
+            AcompanhamentoOrdem.objects.update_or_create(
+                ordem_servico=ordem,
+                defaults={"status": "Agendado"},
+            )
+    return JsonResponse({
+        "orcamento": _dados_orcamento(orcamento),
+        "status": _status_ordem(ordem, orcamento),
+    })
+
+
+@require_http_methods(["PATCH"])
+def atualizar_status_os(request, os_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"erro": "Faça login."}, status=401)
+    try:
+        tecnico = request.user.conta_tecnico.tecnico
+    except ContaTecnico.DoesNotExist:
+        return JsonResponse(
+            {"erro": "Esta conta não está vinculada a um técnico."},
+            status=403,
+        )
+    ordem = OrdemServico.objects.filter(
+        id_ordem_servico=os_id,
+        id_tecnico=tecnico,
+    ).first()
+    if ordem is None:
+        return JsonResponse({"erro": "Ordem de serviço não encontrada."}, status=404)
+
+    dados, erro = _json_objeto(request)
+    if erro:
+        return erro
+    novo_status = dados.get("status")
+    status_validos = {opcao[0] for opcao in AcompanhamentoOrdem.STATUS_CHOICES}
+    if not isinstance(novo_status, str) or novo_status not in status_validos:
+        return JsonResponse({"erro": "Informe um status válido para a ordem."}, status=400)
+
+    atual = _status_ordem(ordem)
+    if novo_status not in TRANSICOES_STATUS_OS.get(atual, set()):
+        return JsonResponse(
+            {"erro": f"Não é permitido alterar '{atual}' para '{novo_status}'."},
+            status=409,
+        )
+    if novo_status == "Em andamento":
+        orcamento = Orcamento.objects.filter(id_ordem_servico=ordem).first()
+        if orcamento is None or orcamento.status != "Aprovado":
+            return JsonResponse(
+                {"erro": "O reparo só pode começar após a aprovação do orçamento pelo cliente."},
+                status=409,
+            )
+
+    AcompanhamentoOrdem.objects.update_or_create(
+        ordem_servico=ordem,
+        defaults={"status": novo_status},
+    )
+    return JsonResponse({"status": novo_status})
+
 
 @require_http_methods(["GET", "POST"])
 def os_collection(request):
@@ -531,7 +959,7 @@ def _resolver_servico_orcamento(descricao):
     return Servico.objects.create(descricao=descricao, status="Ativo")
 
 
-@require_http_methods(["GET", "PUT", "DELETE", "PATCH"])
+@require_http_methods(["GET", "PUT", "DELETE"])
 def orcamento_os(request, os_id):
     if not request.user.is_authenticated:
         return JsonResponse({"erro": "Faça login."}, status=401)
@@ -558,45 +986,25 @@ def orcamento_os(request, os_id):
             "orcamento": _dados_orcamento(orcamento) if orcamento else None,
         })
 
-    if request.method == "PATCH":
-        if orcamento is None:
-            return JsonResponse(
-                {"erro": "Não há orçamento para registrar a aprovação."},
-                status=404,
-            )
-        if orcamento.status != "Pendente":
-            return JsonResponse(
-                {"erro": "Só é possível registrar a aprovação de um orçamento pendente."},
-                status=409,
-            )
-        try:
-            dados = json.loads(request.body)
-        except (json.JSONDecodeError, UnicodeDecodeError):
-            return JsonResponse({"erro": "JSON inválido."}, status=400)
-        if not isinstance(dados, dict) or dados.get("status") != "Aprovado":
-            return JsonResponse(
-                {"erro": "A única alteração disponível é registrar a aprovação do cliente."},
-                status=400,
-            )
-        if not ItemServico.objects.filter(id_orcamento=orcamento).exists():
-            return JsonResponse(
-                {"erro": "Inclua pelo menos um serviço antes de registrar a aprovação."},
-                status=409,
-            )
-
-        orcamento.status = "Aprovado"
-        orcamento.save(update_fields=["status"])
-        return JsonResponse({"orcamento": _dados_orcamento(orcamento)})
+    if _status_ordem(ordem, orcamento) in {"Concluído", "Cancelado"}:
+        return JsonResponse(
+            {"erro": "Não é possível alterar o orçamento de uma ordem encerrada."},
+            status=409,
+        )
 
     if request.method == "DELETE":
         if orcamento is None:
             return HttpResponse(status=204)
-        if orcamento.status != "Pendente":
+        if orcamento.status not in {"Pendente", "Recusado"}:
             return JsonResponse(
                 {"erro": "Só é possível editar um orçamento pendente."},
                 status=409,
             )
         orcamento.delete()
+        AcompanhamentoOrdem.objects.update_or_create(
+            ordem_servico=ordem,
+            defaults={"status": STATUS_INICIAL_OS},
+        )
         return HttpResponse(status=204)
 
     try:
@@ -614,7 +1022,7 @@ def orcamento_os(request, os_id):
             {"erro": "O orçamento precisa ter pelo menos um serviço."},
             status=400,
         )
-    if orcamento and orcamento.status != "Pendente":
+    if orcamento and orcamento.status not in {"Pendente", "Recusado"}:
         return JsonResponse(
             {"erro": "Só é possível editar um orçamento pendente."},
             status=409,
@@ -715,6 +1123,9 @@ def orcamento_os(request, os_id):
                     id_ordem_servico=ordem,
                     status="Pendente",
                 )
+            else:
+                orcamento.status = "Pendente"
+                orcamento.save(update_fields=["status"])
 
             ItemServico.objects.filter(id_orcamento=orcamento).delete()
             ItemServico.objects.bulk_create([
@@ -727,6 +1138,10 @@ def orcamento_os(request, os_id):
                 )
                 for item in itens_com_servico
             ])
+            AcompanhamentoOrdem.objects.update_or_create(
+                ordem_servico=ordem,
+                defaults={"status": "Aguardando aprovação"},
+            )
     except _ServicoDuplicadoNoOrcamento:
         return JsonResponse(
             {"erro": "Cada serviço pode aparecer uma única vez; ajuste a quantidade."},
