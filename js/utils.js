@@ -64,3 +64,18 @@ const emptyPortal = () => ({
   hora: PRIMEIRO_AGENDAMENTO.hora,
   buscar: false
 });
+const emptyClienteCadastro = () => ({
+  nome_completo: '',
+  cpf: '',
+  telefone: '',
+  cep: '',
+  numero: '',
+  bairro: '',
+  rua: '',
+  cidade: '',
+  estado: '',
+  referencia: '',
+  email: '',
+  password: '',
+  password_confirm: ''
+});

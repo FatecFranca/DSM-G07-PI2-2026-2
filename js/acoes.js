@@ -51,6 +51,15 @@ const actions = {
     pErr: ''
   }),
   voltarPortal: async () => {
+    if (state.cliente) {
+      try {
+        await carregarDadosDoCliente();
+        state.apiError = '';
+      } catch (erro) {
+        state.apiError = `Não foi possível atualizar suas ordens: ${erro.message}`;
+      }
+      return go('clientePainel');
+    }
     if (!state.tecnico) return go('login');
     try {
       await carregarDadosDoTecnico();
@@ -64,8 +73,36 @@ const actions = {
   open: el => go('detalhe', {
     selId: el.dataset.id,
     orcForm: emptyOrcForm(),
-    orcErr: ''
+    orcErr: '',
+    statusErr: ''
   }),
+  abrirLoginCliente: () => {
+    state.clienteLogin = { email: '', password: '' };
+    state.clienteLoginErr = '';
+    go('clienteLogin');
+  },
+  voltarLoginTecnico: () => {
+    state.clienteLoginErr = '';
+    go('login');
+  },
+  voltarLoginCliente: () => {
+    state.clienteCadastroErr = '';
+    go('clienteLogin');
+  },
+  abrirCadastroCliente: () => {
+    state.clienteCadastro = emptyClienteCadastro();
+    state.clienteCadastroErr = '';
+    go('clienteCadastro');
+  },
+  abrirOrdemCliente: el => {
+    state.clienteOrdemId = el.dataset.id;
+    state.clienteActionErr = '';
+    go('clienteOrdem');
+  },
+  voltarOrdensCliente: () => {
+    state.clienteActionErr = '';
+    go('clientePainel');
+  },
   closeFlash: () => { state.flash = ''; render(); },
 
   dia: el => { state.agendaDay = el.dataset.d; render(); },
@@ -277,30 +314,150 @@ const actions = {
     }
   },
 
-  aprovarOrcamento: async () => {
-    if (state.orcSaving) return;
-    const ordem = sel();
+  responderOrcamentoCliente: async el => {
+    if (state.clienteSaving) return;
+    const ordem = state.clienteOrdens.find(item => item.id === state.clienteOrdemId);
     if (!ordem || ordem.orc !== 'Pendente' || !ordem.itens.length) return;
-
-    state.orcSaving = true;
-    state.orcErr = '';
+    const status = el.dataset.status;
+    state.clienteSaving = true;
+    state.clienteActionErr = '';
     render();
     try {
-      const resposta = await apiRequest(`/os/${ordem.id}/orcamento/`, {
-        method: 'PATCH',
-        body: { status: 'Aprovado' }
+      const resposta = await apiRequest(`/cliente/os/${ordem.id}/orcamento/`, {
+        method: 'POST',
+        body: { status }
       });
-      if (resposta.orcamento?.status !== 'Aprovado') {
-        throw new Error('O servidor não confirmou a aprovação do orçamento.');
+      if (resposta.orcamento?.status !== status) {
+        throw new Error('O servidor não confirmou sua resposta ao orçamento.');
       }
-
       ordem.orc = resposta.orcamento.status;
-      state.os = state.os.map(item => item.id === ordem.id ? ordem : item);
-      state.flash = 'Aprovação do cliente registrada no orçamento.';
+      ordem.status = resposta.status;
+      state.flash = status === 'Aprovado'
+        ? 'Orçamento aprovado. O técnico foi avisado.'
+        : 'Orçamento rejeitado. O técnico poderá revisar a proposta.';
     } catch (erro) {
-      state.orcErr = erro.message;
+      state.clienteActionErr = erro.message;
     } finally {
-      state.orcSaving = false;
+      state.clienteSaving = false;
+      render();
+    }
+  },
+
+  salvarStatusOS: async () => {
+    if (state.statusSaving) return;
+    const ordem = sel();
+    const novoStatus = document.getElementById('status-os')?.value;
+    if (!ordem || !novoStatus) return;
+    state.statusSaving = true;
+    state.statusErr = '';
+    render();
+    try {
+      const resposta = await apiRequest(`/os/${ordem.id}/status/`, {
+        method: 'PATCH',
+        body: { status: novoStatus }
+      });
+      ordem.status = resposta.status;
+      state.flash = 'Andamento da ordem atualizado.';
+    } catch (erro) {
+      state.statusErr = erro.message;
+    } finally {
+      state.statusSaving = false;
+      render();
+    }
+  },
+
+  loginCliente: async () => {
+    if (state.clienteLoading) return;
+    const email = state.clienteLogin.email.trim();
+    const password = state.clienteLogin.password;
+    if (!email || !password) {
+      state.clienteLoginErr = 'Informe seu e-mail e sua senha.';
+      return render();
+    }
+    state.clienteLoading = true;
+    state.clienteLoginErr = '';
+    invalidarCarregamentosDeAutenticacao();
+    render();
+    try {
+      const perfil = await apiRequest('/cliente/login/', {
+        method: 'POST',
+        body: { email, password }
+      });
+      const carregou = await carregarDadosDoCliente(perfil);
+      if (!carregou) return;
+      state.screen = 'clientePainel';
+      state.clienteLogin = { email: '', password: '' };
+      state.flash = '';
+      state.apiError = '';
+    } catch (erro) {
+      state.clienteLogin.password = '';
+      state.clienteLoginErr = erro.message;
+    } finally {
+      state.clienteLoading = false;
+      render();
+    }
+  },
+
+  cadastrarCliente: async () => {
+    if (state.clienteLoading) return;
+    const formulario = state.clienteCadastro;
+    const obrigatorios = [
+      formulario.nome_completo,
+      formulario.cpf,
+      formulario.telefone,
+      formulario.cep,
+      formulario.numero,
+      formulario.bairro,
+      formulario.rua,
+      formulario.cidade,
+      formulario.estado,
+      formulario.email,
+      formulario.password,
+      formulario.password_confirm
+    ];
+    if (!obrigatorios.every(valor => String(valor).trim())) {
+      state.clienteCadastroErr = 'Preencha todos os campos obrigatórios.';
+      return render();
+    }
+
+    const cliente = {
+      nome_completo: formulario.nome_completo.trim(),
+      cpf: formulario.cpf.replace(/\D/g, ''),
+      telefone: formulario.telefone.trim(),
+      cep: formulario.cep.replace(/\D/g, ''),
+      numero: formulario.numero.trim(),
+      bairro: formulario.bairro.trim(),
+      rua: formulario.rua.trim(),
+      cidade: formulario.cidade.trim(),
+      estado: formulario.estado.trim().toUpperCase(),
+      referencia: formulario.referencia.trim()
+    };
+    state.clienteLoading = true;
+    state.clienteCadastroErr = '';
+    invalidarCarregamentosDeAutenticacao();
+    render();
+    try {
+      const perfil = await apiRequest('/cliente/cadastro/', {
+        method: 'POST',
+        body: {
+          email: formulario.email.trim(),
+          password: formulario.password,
+          password_confirm: formulario.password_confirm,
+          cliente
+        }
+      });
+      const carregou = await carregarDadosDoCliente(perfil);
+      if (!carregou) return;
+      state.clienteCadastro = emptyClienteCadastro();
+      state.screen = 'clientePainel';
+      state.flash = 'Conta criada com sucesso.';
+      state.apiError = '';
+    } catch (erro) {
+      state.clienteCadastro.password = '';
+      state.clienteCadastro.password_confirm = '';
+      state.clienteCadastroErr = erro.message;
+    } finally {
+      state.clienteLoading = false;
       render();
     }
   },
@@ -330,6 +487,8 @@ const actions = {
       }
 
       state.tecnico = perfil.tecnico;
+      state.cliente = null;
+      state.clienteOrdens = [];
       state.tecnicos = [perfil.tecnico];
       state.loginErr = '';
       state.apiError = '';
@@ -367,6 +526,9 @@ const actions = {
       await apiRequest('/logout/', { method: 'POST' });
       state.tecnico = null;
       state.tecnicos = [];
+      state.cliente = null;
+      state.clienteOrdens = [];
+      state.clienteOrdemId = null;
       state.os = [];
       state.servicos = [];
       state.selId = null;

@@ -29,5 +29,17 @@ function viewApp() {
 /* Redesenha a tela inteira a partir do state */
 function render() {
   const app = document.getElementById('app');
-  app.innerHTML = state.screen === 'login' ? viewLogin() : state.screen === 'portal' ? viewPortal() : viewApp();
+  const viewsCliente = {
+    clienteLogin: viewClienteLogin,
+    clienteCadastro: viewClienteCadastro,
+    clientePainel: viewClientePainel,
+    clienteOrdem: viewClienteOrdem
+  };
+  app.innerHTML = state.screen === 'login'
+    ? viewLogin()
+    : state.screen === 'portal'
+      ? viewPortal()
+      : viewsCliente[state.screen]
+        ? viewsCliente[state.screen]()
+        : viewApp();
 }

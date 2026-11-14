@@ -7,9 +7,15 @@ document.addEventListener('click', e => {
 });
 
 document.addEventListener('submit', e => {
-  if (!e.target.matches('[data-form="login"]')) return;
+  const formulario = e.target.dataset.form;
+  const submitters = {
+    login: () => actions.login(),
+    'cliente-login': () => actions.loginCliente(),
+    'cliente-cadastro': () => actions.cadastrarCliente()
+  };
+  if (!Object.prototype.hasOwnProperty.call(submitters, formulario)) return;
   e.preventDefault();
-  actions.login();
+  submitters[formulario]();
 });
 
 /* Campos: guardam o valor no estado sem redesenhar (o cursor não pula) */

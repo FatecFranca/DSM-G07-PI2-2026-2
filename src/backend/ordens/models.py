@@ -130,3 +130,44 @@ class ContaTecnico(models.Model):
 
     class Meta:
         db_table = "ordens_conta_tecnico"
+
+
+class ContaCliente(models.Model):
+    cliente = models.OneToOneField(
+        Cliente,
+        on_delete=models.PROTECT,
+        db_column="id_cliente",
+        related_name="conta",
+    )
+    usuario = models.OneToOneField(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.CASCADE,
+        related_name="conta_cliente",
+    )
+
+    class Meta:
+        db_table = "ordens_conta_cliente"
+
+
+class AcompanhamentoOrdem(models.Model):
+    STATUS_CHOICES = [
+        ("Aguardando triagem", "Aguardando triagem"),
+        ("Aguardando aprovação", "Aguardando aprovação"),
+        ("Agendado", "Agendado"),
+        ("Em andamento", "Em andamento"),
+        ("Concluído", "Concluído"),
+        ("Cancelado", "Cancelado"),
+    ]
+
+    ordem_servico = models.OneToOneField(
+        OrdemServico,
+        on_delete=models.CASCADE,
+        db_column="id_ordem_servico",
+        primary_key=True,
+        related_name="acompanhamento",
+    )
+    status = models.CharField(max_length=30, choices=STATUS_CHOICES)
+    atualizado_em = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        db_table = "ordens_acompanhamento_ordem"

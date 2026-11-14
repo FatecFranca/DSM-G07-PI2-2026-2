@@ -1,5 +1,13 @@
 let revisaoAutenticacao = 0;
 
+if (new URLSearchParams(window.location.search).has('password')) {
+  window.history.replaceState(
+    window.history.state,
+    '',
+    window.location.pathname + window.location.hash
+  );
+}
+
 function invalidarCarregamentosDeAutenticacao() {
   revisaoAutenticacao += 1;
 }
@@ -46,17 +54,44 @@ async function carregarDadosDoTecnico(perfilInicial = null) {
   return true;
 }
 
+async function carregarDadosDoCliente(perfilInicial = null) {
+  const revisao = revisaoAutenticacao;
+  const perfil = perfilInicial || await apiGet('/me/');
+  if (revisao !== revisaoAutenticacao) return false;
+  if (!perfil.cliente) {
+    throw new Error('A API não retornou os dados do cliente autenticado.');
+  }
+
+  const resposta = await apiGet('/cliente/ordens/');
+  if (revisao !== revisaoAutenticacao) return false;
+  state.tecnico = null;
+  state.tecnicos = [];
+  state.os = [];
+  state.servicos = [];
+  state.selId = null;
+  state.cliente = perfil.cliente;
+  state.clienteOrdens = resposta.ordens.map(normalizarOrdem);
+  state.clienteOrdemId = null;
+  return true;
+}
+
 async function iniciarAplicacao() {
   const revisao = revisaoAutenticacao;
   try {
-    const carregou = await carregarDadosDoTecnico();
+    const perfil = await apiGet('/me/');
+    if (revisao !== revisaoAutenticacao) return;
+    const carregou = perfil.perfil === 'cliente'
+      ? await carregarDadosDoCliente(perfil)
+      : await carregarDadosDoTecnico(perfil);
     if (!carregou || revisao !== revisaoAutenticacao) return;
-    state.screen = 'painel';
+    state.screen = perfil.perfil === 'cliente' ? 'clientePainel' : 'painel';
   } catch (erro) {
     if (revisao !== revisaoAutenticacao) return;
     if (erro.status === 401 || !state.tecnico) {
       state.tecnico = null;
       state.tecnicos = [];
+      state.cliente = null;
+      state.clienteOrdens = [];
       state.os = [];
       state.servicos = [];
       state.selId = null;

@@ -33,6 +33,14 @@ const PRIMEIRO_AGENDAMENTO = (() => {
   return { data: DIAS[0], hora: HORAS[0] };
 })();
 const ORC_CLASS = {'Sem orçamento':'s-triagem','Pendente':'s-aprov','Aprovado':'s-concl','Recusado':'s-cancel'};
+const STATUS_CLASS = {
+  'Aguardando triagem': 's-triagem',
+  'Aguardando aprovação': 's-aprov',
+  'Agendado': 's-agend',
+  'Em andamento': 's-andam',
+  'Concluído': 's-concl',
+  'Cancelado': 's-cancel'
+};
 
 const SEMANA = ['Dom','Seg','Ter','Qua','Qui','Sex','Sáb'];
 

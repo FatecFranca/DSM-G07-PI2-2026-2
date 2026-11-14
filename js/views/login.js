@@ -6,7 +6,7 @@ function viewLogin() {
       <div class="logo">TechManager</div>
       <div class="divider">Acesso do técnico</div>
       <h1 id="login-title" style="margin:0;text-align:center;font-size:20px">Entrar na sua conta</h1>
-      <form class="login-form" data-form="login" novalidate>
+      <form class="login-form" method="post" data-form="login" novalidate>
         <div class="field">
           <label for="lg-user">Usuário</label>
           <input id="lg-user" name="username" autocomplete="username" required>
@@ -19,6 +19,9 @@ function viewLogin() {
           ${state.loginLoading ? 'Entrando...' : 'Entrar'}
         </button>
       </form>
+      <button type="button" class="btn btn-ghost" data-action="abrirLoginCliente">
+        Acesso do cliente
+      </button>
       <button type="button" class="btn btn-ghost" data-action="portal">
         Solicitar atendimento
       </button>

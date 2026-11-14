@@ -136,20 +136,6 @@ CREATE TABLE aparelho (
     ON DELETE CASCADE ON UPDATE CASCADE
 ) ENGINE=InnoDB;
 
-USE assistencia_tecnica;
-show tables;
-
--- USUÁRIO BACKEND--
-CREATE USER IF NOT EXISTS 'techmanager_app'@'localhost'
-IDENTIFIED BY '#enhaB4ck';
-
-ALTER USER 'techmanager_app'@'localhost'
-IDENTIFIED BY '$enhaB4ck';
-
-GRANT ALL PRIVILEGES ON assistencia_tecnica.*
-TO 'techmanager_app'@'localhost';
-
 -- Criação do primeiro técnico para teste da validação de login
-USE assistencia_tecnica;
 INSERT into tecnico(nome,nivel) VALUES
 ("Técnico teste","Proprietário");
