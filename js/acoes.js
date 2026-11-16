@@ -25,6 +25,11 @@ async function salvarItensOrcamento(ordem, itens) {
     if (!orcamento) {
       throw new Error('O servidor não confirmou o orçamento salvo.');
     }
+    if (typeof resposta.status !== 'string' || !resposta.status) {
+      throw new Error('O servidor não retornou o status atualizado da ordem.');
+    }
+    
+    ordem.status = resposta.status;
   } else {
     await apiRequest(caminho, { method: 'DELETE' });
     orcamento = null;

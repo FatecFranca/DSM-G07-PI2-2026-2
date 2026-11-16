@@ -6,13 +6,15 @@ function viewDetalhe() {
       <button type="button" class="btn btn-ghost" data-action="go" data-to="ordens">Voltar às ordens</button>
     </section>`;
   }
-
-  const editavel = ['Sem orçamento', 'Pendente', 'Recusado'].includes(ordem.orc);
+  const editavel =
+  ['Sem orçamento', 'Pendente', 'Recusado'].includes(ordem.orc) ||
+  (ordem.status === 'Em andamento' && ordem.orc === 'Aprovado');
+  
   const proximosStatus = {
     'Aguardando triagem': ['Cancelado'],
     'Aguardando aprovação': ['Cancelado'],
     'Agendado': ['Em andamento', 'Cancelado'],
-    'Em andamento': ['Concluído', 'Cancelado'],
+    'Em andamento': ["Concluído", "Cancelado", "Aguardando aprovação"],
     'Concluído': [],
     'Cancelado': []
   }[ordem.status] || [];

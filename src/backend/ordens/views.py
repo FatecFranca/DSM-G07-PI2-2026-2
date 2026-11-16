@@ -34,8 +34,8 @@ STATUS_INICIAL_OS = "Aguardando triagem"
 TRANSICOES_STATUS_OS = {
     "Aguardando triagem": {"Cancelado"},
     "Aguardando aprovação": {"Cancelado"},
+    "Em andamento": {"Concluído", "Cancelado", "Aguardando aprovação"},
     "Agendado": {"Em andamento", "Cancelado"},
-    "Em andamento": {"Concluído", "Cancelado"},
     "Concluído": set(),
     "Cancelado": set(),
 }
@@ -1069,7 +1069,18 @@ def orcamento_os(request, os_id):
             {"erro": "O orçamento precisa ter pelo menos um serviço."},
             status=400,
         )
-    if orcamento and orcamento.status not in {"Pendente", "Recusado"}:
+    status_atual = _status_ordem(ordem, orcamento)
+    orcamento_aprovado_em_execucao = (
+        orcamento is not None
+        and orcamento.status == "Aprovado"
+        and status_atual == "Em andamento"
+    )
+
+    if (
+        orcamento
+        and orcamento.status not in {"Pendente", "Recusado"}
+        and not orcamento_aprovado_em_execucao
+    ):
         return JsonResponse(
             {"erro": "Só é possível editar um orçamento pendente."},
             status=409,
@@ -1195,4 +1206,7 @@ def orcamento_os(request, os_id):
             status=400,
         )
 
-    return JsonResponse({"orcamento": _dados_orcamento(orcamento)})
+    return JsonResponse({
+        "orcamento": _dados_orcamento(orcamento),
+        "status": _status_ordem(ordem, orcamento),
+        })
