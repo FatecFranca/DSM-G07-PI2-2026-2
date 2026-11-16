@@ -227,6 +227,37 @@ class CadastroClienteTests(SimpleTestCase):
 
 
 class StatusOrdemTests(SimpleTestCase):
+    def test_tecnico_pode_enviar_os_em_andamento_para_aprovacao(self):
+        tecnico = SimpleNamespace(id_tecnico=7)
+        ordem = SimpleNamespace(id_ordem_servico=42, id_tecnico=tecnico)
+        request = self.factory.patch(
+            "/api/os/42/status/",
+            data=json.dumps({"status": "Aguardando aprovação"}),
+            content_type="application/json",
+        )
+        request.user = SimpleNamespace(
+            is_authenticated=True,
+            conta_tecnico=SimpleNamespace(tecnico=tecnico),
+        )
+
+        with (
+            patch("ordens.views.OrdemServico.objects.filter") as filtrar_ordem,
+            patch("ordens.views.AcompanhamentoOrdem.objects.update_or_create") as atualizar_status,
+            patch("ordens.views._status_ordem", return_value="Em andamento"),
+        ):
+            filtrar_ordem.return_value.first.return_value = ordem
+
+            resposta = views.atualizar_status_os(request, os_id=42)
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(
+            json.loads(resposta.content),
+            {"status": "Aguardando aprovação"},
+        )
+        atualizar_status.assert_called_once_with(
+            ordem_servico=ordem,
+            defaults={"status": "Aguardando aprovação"},
+        )
     def setUp(self):
         self.factory = RequestFactory()
 
@@ -257,6 +288,74 @@ class StatusOrdemTests(SimpleTestCase):
         self.assertEqual(resposta.status_code, 409)
         atualizar_status.assert_not_called()
 
+
+class OrcamentoEmAndamentoTests(SimpleTestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_put_edita_orcamento_aprovado_e_retorna_status_atualizado(self):
+        tecnico = SimpleNamespace(id_tecnico=7)
+        ordem = SimpleNamespace(id_ordem_servico=42, id_tecnico=tecnico)
+        orcamento = views.Orcamento(id_orcamento=11, status="Aprovado")
+        servico = views.Servico(
+            id_servico=3,
+            descricao="Serviço de teste",
+            status="Ativo",
+        )
+
+        request = self.factory.put(
+            "/api/os/42/orcamento/",
+            data=json.dumps({
+                "itens": [{
+                    "id_servico": 3,
+                    "quantidade": 1,
+                    "mao_de_obra": "50.00",
+                    "custo_item": "20.00",
+                }],
+            }),
+            content_type="application/json",
+        )
+        request.user = SimpleNamespace(
+            is_authenticated=True,
+            conta_tecnico=SimpleNamespace(tecnico=tecnico),
+        )
+
+        with (
+            patch("ordens.views.OrdemServico.objects.filter") as filtrar_ordem,
+            patch("ordens.views.Orcamento.objects.filter") as filtrar_orcamento,
+            patch("ordens.views.Servico.objects.in_bulk", return_value={3: servico}),
+            patch.object(orcamento, "save") as salvar_orcamento,
+            patch("ordens.views.ItemServico.objects.filter") as filtrar_itens,
+            patch("ordens.views.ItemServico.objects.bulk_create") as criar_itens,
+            patch("ordens.views.AcompanhamentoOrdem.objects.update_or_create") as atualizar_status,
+            patch(
+                "ordens.views._status_ordem",
+                side_effect=["Em andamento", "Em andamento", "Aguardando aprovação"],
+            ),
+            patch(
+                "ordens.views._dados_orcamento",
+                return_value={"status": "Pendente", "itens": []},
+            ),
+            patch("ordens.views.transaction.atomic", return_value=nullcontext()),
+        ):
+            filtrar_ordem.return_value.first.return_value = ordem
+            filtrar_orcamento.return_value.first.return_value = orcamento
+
+            resposta = views.orcamento_os(request, os_id=42)
+
+        dados_resposta = json.loads(resposta.content)
+
+        self.assertEqual(resposta.status_code, 200)
+        self.assertEqual(dados_resposta["status"], "Aguardando aprovação")
+        self.assertEqual(dados_resposta["orcamento"]["status"], "Pendente")
+        self.assertEqual(orcamento.status, "Pendente")
+        salvar_orcamento.assert_called_once_with(update_fields=["status"])
+        atualizar_status.assert_called_once_with(
+            ordem_servico=ordem,
+            defaults={"status": "Aguardando aprovação"},
+        )
+        filtrar_itens.return_value.delete.assert_called_once_with()
+        criar_itens.assert_called_once()
 
 class ValorMonetarioTests(SimpleTestCase):
     def test_aceita_duas_casas_decimais(self):
