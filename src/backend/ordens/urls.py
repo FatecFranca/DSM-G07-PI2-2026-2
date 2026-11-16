@@ -9,6 +9,11 @@ urlpatterns = [
     path("cliente/login/", views.api_cliente_login, name="api_cliente_login"),
     path("cliente/ordens/", views.ordens_cliente, name="ordens_cliente"),
     path(
+        "cliente/solicitacoes/",
+        views.solicitar_os_cliente,
+        name="solicitar_os_cliente",
+    ),
+    path(
         "cliente/os/<int:os_id>/orcamento/",
         views.responder_orcamento_cliente,
         name="responder_orcamento_cliente",

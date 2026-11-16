@@ -344,7 +344,40 @@ def solicitar_os_portal(request):
     return _registrar_os(request, tecnico, resposta_publica=True)
 
 
-def _registrar_os(request, tecnico, resposta_publica=False):
+@require_POST
+def solicitar_os_cliente(request):
+    if not request.user.is_authenticated:
+        return JsonResponse({"erro": "Faça login para solicitar atendimento."}, status=401)
+
+    try:
+        cliente = request.user.conta_cliente.cliente
+    except (AttributeError, ContaCliente.DoesNotExist):
+        return JsonResponse(
+            {"erro": "Esta conta não está vinculada a um cliente."},
+            status=403,
+        )
+
+    try:
+        tecnico = Tecnico.objects.get(pk=settings.DEFAULT_TECHNICIAN_ID)
+    except Tecnico.DoesNotExist:
+        return JsonResponse(
+            {"erro": "O técnico padrão do portal não existe no cadastro do MySQL."},
+            status=503,
+        )
+
+    return _registrar_os(
+        request,
+        tecnico,
+        cliente_autenticado=cliente,
+    )
+
+
+def _registrar_os(
+    request,
+    tecnico,
+    resposta_publica=False,
+    cliente_autenticado=None,
+):
     try:
         dados = json.loads(request.body)
     except (json.JSONDecodeError, UnicodeDecodeError):
@@ -353,7 +386,26 @@ def _registrar_os(request, tecnico, resposta_publica=False):
     if not isinstance(dados, dict):
         return JsonResponse({"erro": "Envie um objeto JSON."}, status=400)
 
+    if cliente_autenticado is None:
+        try:
+            cliente_autenticado = request.user.conta_cliente.cliente
+        except (AttributeError, ContaCliente.DoesNotExist):
+            pass
+
     cliente_dados = dados.get("cliente")
+    if cliente_autenticado:
+        cliente_dados = {
+            "nome_completo": cliente_autenticado.nome_completo,
+            "cpf": cliente_autenticado.cpf,
+            "telefone": cliente_autenticado.telefone,
+            "cep": cliente_autenticado.cep,
+            "numero": cliente_autenticado.numero,
+            "bairro": cliente_autenticado.bairro,
+            "rua": cliente_autenticado.rua,
+            "cidade": cliente_autenticado.cidade,
+            "referencia": cliente_autenticado.referencia or "",
+            "estado": cliente_autenticado.estado,
+        }
     aparelho_dados = dados.get("aparelho")
     agendamento_dados = dados.get("agendamento")
 
@@ -502,11 +554,6 @@ def _registrar_os(request, tecnico, resposta_publica=False):
     )
 
     with transaction.atomic():
-        try:
-            cliente_autenticado = request.user.conta_cliente.cliente
-        except (AttributeError, ContaCliente.DoesNotExist):
-            cliente_autenticado = None
-
         if cliente_autenticado:
             if cpf != cliente_autenticado.cpf:
                 return JsonResponse(
