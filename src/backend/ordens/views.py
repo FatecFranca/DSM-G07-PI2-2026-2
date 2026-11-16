@@ -818,6 +818,68 @@ def ordens_cliente(request):
         })
     return JsonResponse({"ordens": resultado})
 
+@require_POST
+def aprovar_orcamento_presencial(request, os_id):
+    if not request.user.is_authenticated:
+        return JsonResponse({"erro": "Faça login."}, status=401)
+
+    try:
+        tecnico = request.user.conta_tecnico.tecnico
+    except ContaTecnico.DoesNotExist:
+        return JsonResponse(
+            {"erro": "Esta conta não está vinculada a um técnico."},
+            status=403,
+        )
+
+    with transaction.atomic():
+        ordem = OrdemServico.objects.select_for_update().filter(
+            id_ordem_servico=os_id,
+            id_tecnico=tecnico,
+        ).first()
+
+        if ordem is None:
+            return JsonResponse({"erro": "Ordem de serviço não encontrada."}, status=404)
+
+        orcamento = Orcamento.objects.select_for_update().filter(
+            id_ordem_servico=ordem,
+        ).first()
+
+        if orcamento is None:
+            return JsonResponse(
+                {"erro": "Esta ordem ainda não possui orçamento."},
+                status=404,
+            )
+
+        if orcamento.status != "Pendente":
+            return JsonResponse(
+                {"erro": "Só é possível aprovar um orçamento pendente."},
+                status=409,
+            )
+
+        if _status_ordem(ordem, orcamento) in {"Concluído", "Cancelado"}:
+            return JsonResponse(
+                {"erro": "Esta ordem de serviço já foi encerrada."},
+                status=409,
+            )
+
+        if not ItemServico.objects.filter(id_orcamento=orcamento).exists():
+            return JsonResponse(
+                {"erro": "O orçamento ainda não possui itens."},
+                status=409,
+            )
+
+        orcamento.status = "Aprovado"
+        orcamento.save(update_fields=["status"])
+
+        AcompanhamentoOrdem.objects.update_or_create(
+            ordem_servico=ordem,
+            defaults={"status": "Agendado"},
+        )
+
+    return JsonResponse({
+        "orcamento": _dados_orcamento(orcamento),
+        "status": _status_ordem(ordem, orcamento),
+    })
 
 @require_POST
 def responder_orcamento_cliente(request, os_id):
