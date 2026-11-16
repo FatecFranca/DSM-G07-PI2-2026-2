@@ -1,5 +1,6 @@
 import json
 from contextlib import nullcontext
+from datetime import timedelta
 from decimal import Decimal
 from types import SimpleNamespace
 from unittest.mock import patch
@@ -343,6 +344,117 @@ class PortalPublicoTests(SimpleTestCase):
             resposta = views.solicitar_os_portal(request)
 
         self.assertEqual(resposta.status_code, 503)
+
+
+class SolicitacaoClienteTests(SimpleTestCase):
+    def setUp(self):
+        self.factory = RequestFactory()
+
+    def test_solicitacao_exige_sessao_autenticada(self):
+        request = self.factory.post("/api/cliente/solicitacoes/")
+        request.user = SimpleNamespace(is_authenticated=False)
+
+        resposta = views.solicitar_os_cliente(request)
+
+        self.assertEqual(resposta.status_code, 401)
+
+    def test_solicitacao_usa_cliente_vinculado_a_sessao(self):
+        cliente = SimpleNamespace(id_cliente=5)
+        tecnico = SimpleNamespace(id_tecnico=2)
+        request = self.factory.post(
+            "/api/cliente/solicitacoes/",
+            data=json.dumps({
+                "aparelho": {
+                    "numero_serie": "ABC123",
+                    "equipamento": "Notebook",
+                    "defeito": "Não liga",
+                },
+                "agendamento": {
+                    "data": (views.timezone.now() + timedelta(days=1)).isoformat(),
+                    "buscar": False,
+                },
+            }),
+            content_type="application/json",
+        )
+        request.user = SimpleNamespace(
+            is_authenticated=True,
+            conta_cliente=SimpleNamespace(cliente=cliente),
+        )
+
+        with (
+            patch("ordens.views.Tecnico.objects.get", return_value=tecnico),
+            patch(
+                "ordens.views._registrar_os",
+                return_value=JsonResponse({"numero_os": "OS-TESTE"}, status=201),
+            ) as registrar_os,
+        ):
+            resposta = views.solicitar_os_cliente(request)
+
+        self.assertEqual(resposta.status_code, 201)
+        registrar_os.assert_called_once_with(
+            request,
+            tecnico,
+            cliente_autenticado=cliente,
+        )
+
+    def test_registra_os_com_apenas_dados_do_aparelho_e_sessao_do_cliente(self):
+        cliente = SimpleNamespace(
+            id_cliente=5,
+            nome_completo="Cliente cadastrado",
+            cpf="12345678901",
+            telefone="11999999999",
+            cep="12345678",
+            numero="10",
+            bairro="Centro",
+            rua="Rua Um",
+            cidade="São Paulo",
+            referencia="",
+            estado="SP",
+        )
+        tecnico = SimpleNamespace(id_tecnico=2, nome="Técnico")
+        ordem = SimpleNamespace(id_ordem_servico=42, numero_os="OS-TESTE")
+        request = self.factory.post(
+            "/api/cliente/solicitacoes/",
+            data=json.dumps({
+                "aparelho": {
+                    "numero_serie": "",
+                    "equipamento": "Notebook",
+                    "defeito": "Não liga",
+                },
+                "agendamento": {
+                    "data": (views.timezone.now() + timedelta(days=1)).isoformat(),
+                    "buscar": False,
+                },
+            }),
+            content_type="application/json",
+        )
+
+        with (
+            patch("ordens.views.OrdemServico.objects.create", return_value=ordem) as criar_ordem,
+            patch("ordens.views.AcompanhamentoOrdem.objects.create"),
+            patch(
+                "ordens.views.Aparelho.objects.create",
+                return_value=SimpleNamespace(id_aparelho=7),
+            ),
+            patch(
+                "ordens.views.Agendamento.objects.create",
+                return_value=SimpleNamespace(
+                    id_agendamento=8,
+                    data=views.timezone.now() + timedelta(days=1),
+                ),
+            ),
+            patch("ordens.views.OsAgendamento.objects.create"),
+            patch("ordens.views.transaction.atomic", return_value=nullcontext()),
+        ):
+            resposta = views._registrar_os(
+                request,
+                tecnico,
+                cliente_autenticado=cliente,
+            )
+
+        self.assertEqual(resposta.status_code, 201)
+        criar_ordem.assert_called_once()
+        self.assertIs(criar_ordem.call_args.kwargs["id_cliente"], cliente)
 
 
 class CriacaoOsTests(SimpleTestCase):

@@ -16,9 +16,9 @@ function viewPortal() {
     : `<section class="card stack">
         <div>
           <h1 style="margin:0 0 6px;font-size:24px">Solicitar atendimento</h1>
-          <p class="sub" style="margin:0">Preencha seus dados e escolha uma data para o primeiro atendimento. Os campos marcados são necessários para registrar a solicitação.</p>
+          <p class="sub" style="margin:0">${state.cliente ? `Olá, ${esc(state.cliente.nome)}. Seus dados cadastrados serão associados à solicitação. Informe os dados do aparelho e escolha uma data para o atendimento.` : 'Preencha seus dados e escolha uma data para o primeiro atendimento. Os campos marcados são necessários para registrar a solicitação.'}</p>
         </div>
-        <h2>Dados do cliente</h2>
+        ${state.cliente ? '' : `<h2>Dados do cliente</h2>
         <div class="grid-auto">
           ${input('p-nome', 'Nome completo', 'portal', 'nome', 'maxlength="120" required')}
           ${input('p-cpf', 'CPF (11 dígitos)', 'portal', 'cpf', 'maxlength="14" placeholder="000.000.000-00" required')}
@@ -30,7 +30,7 @@ function viewPortal() {
           ${input('p-cidade', 'Cidade', 'portal', 'cidade', 'maxlength="80" required')}
           ${input('p-estado', 'Estado (UF)', 'portal', 'estado', 'maxlength="2" required')}
           ${input('p-referencia', 'Referência (opcional)', 'portal', 'referencia', 'maxlength="150"')}
-        </div>
+        </div>`}
         <h2>Dados do aparelho</h2>
         <div class="grid-auto">
           ${input('p-equipamento', 'Tipo de aparelho', 'portal', 'equip', 'required')}

@@ -114,30 +114,34 @@ const actions = {
 
   enviarPortal: async () => {
     const formulario = state.portal;
-    const obrigatorios = [
-      formulario.nome, formulario.cpf, formulario.telefone, formulario.cep,
-      formulario.numero, formulario.bairro, formulario.rua, formulario.cidade,
-      formulario.estado, formulario.equip, formulario.defeito,
-      formulario.data, formulario.hora
-    ];
+    const obrigatorios = state.cliente
+      ? [formulario.equip, formulario.defeito, formulario.data, formulario.hora]
+      : [
+          formulario.nome, formulario.cpf, formulario.telefone, formulario.cep,
+          formulario.numero, formulario.bairro, formulario.rua, formulario.cidade,
+          formulario.estado, formulario.equip, formulario.defeito,
+          formulario.data, formulario.hora
+        ];
     if (!obrigatorios.every(valor => String(valor).trim())) {
       state.pErr = 'Preencha todos os campos obrigatórios.';
       return render();
     }
 
     const payload = {
-      cliente: {
-        nome_completo: formulario.nome.trim(),
-        cpf: formulario.cpf.replace(/\D/g, ''),
-        telefone: formulario.telefone.trim(),
-        cep: formulario.cep.replace(/\D/g, ''),
-        numero: formulario.numero.trim(),
-        bairro: formulario.bairro.trim(),
-        rua: formulario.rua.trim(),
-        cidade: formulario.cidade.trim(),
-        estado: formulario.estado.toUpperCase(),
-        referencia: formulario.referencia.trim()
-      },
+      ...(!state.cliente ? {
+        cliente: {
+          nome_completo: formulario.nome.trim(),
+          cpf: formulario.cpf.replace(/\D/g, ''),
+          telefone: formulario.telefone.trim(),
+          cep: formulario.cep.replace(/\D/g, ''),
+          numero: formulario.numero.trim(),
+          bairro: formulario.bairro.trim(),
+          rua: formulario.rua.trim(),
+          cidade: formulario.cidade.trim(),
+          estado: formulario.estado.toUpperCase(),
+          referencia: formulario.referencia.trim()
+        }
+      } : {}),
       aparelho: {
         numero_serie: formulario.numeroSerie.trim(),
         equipamento: formulario.equip.trim(),
@@ -150,7 +154,10 @@ const actions = {
     };
 
     try {
-      const resposta = await apiRequest('/portal/solicitacoes/', {
+      const caminho = state.cliente
+        ? '/cliente/solicitacoes/'
+        : '/portal/solicitacoes/';
+      const resposta = await apiRequest(caminho, {
         method: 'POST',
         body: payload
       });
