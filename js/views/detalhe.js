@@ -35,7 +35,17 @@ function viewDetalhe() {
     <div class="main-col">
       <section class="card stack">
         <h2 style="margin:0">Andamento do conserto</h2>
-        <div>${pill(ordem.status, STATUS_CLASS[ordem.status] || 's-triagem')}</div>
+        <div>${pill(ordem.status, STATUS_CLASS[ordem.status] || 's-triagem')}${ordem.orc === 'Pendente' && ordem.itens.length
+  ? `<button
+       type="button"
+       class="btn btn-ok"
+       data-action="aprovarOrcamentoPresencial"
+       ${state.orcSaving ? 'disabled aria-busy="true"' : ''}>
+       ${state.orcSaving
+         ? 'Registrando...'
+         : 'Registrar aprovação presencial do cliente'}
+     </button>`
+  : ''}</div>
         ${proximosStatus.length ? `<div style="display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap">
           <div class="field" style="min-width:220px">
             <label for="status-os">Atualizar andamento</label>

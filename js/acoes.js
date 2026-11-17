@@ -552,5 +552,43 @@ const actions = {
       state.apiError = `Não foi possível encerrar a sessão: ${erro.message}`;
       render();
     }
+  },
+  aprovarOrcamentoPresencial: async () => {
+  if (state.orcSaving) return;
+
+  const ordem = sel();
+  if (!ordem || ordem.orc !== 'Pendente' || !ordem.itens.length) return;
+
+  const confirmado = window.confirm(
+    'Confirma que o cliente está presente, revisou os itens e autorizou este orçamento?'
+  );
+  if (!confirmado) return;
+
+  state.orcSaving = true;
+  state.orcErr = '';
+  render();
+
+  try {
+    const resposta = await apiRequest(
+      `/os/${ordem.id}/orcamento/aprovacao-presencial/`,
+      { method: 'POST' }
+    );
+
+    if (
+      resposta.orcamento?.status !== 'Aprovado' ||
+      resposta.status !== 'Agendado'
+    ) {
+      throw new Error('O servidor não confirmou a aprovação presencial.');
+    }
+
+    ordem.orc = resposta.orcamento.status;
+    ordem.status = resposta.status;
+    state.flash = 'Aprovação presencial do cliente registrada.';
+  } catch (erro) {
+    state.orcErr = erro.message;
+  } finally {
+    state.orcSaving = false;
+    render();
   }
+},
 };

@@ -33,4 +33,9 @@ urlpatterns = [
     ),
     path("os/<int:os_id>/status/", views.atualizar_status_os, name="atualizar_status_os"),
     path("os/", views.os_collection, name="os_collection"),
+    path(
+    "os/<int:os_id>/orcamento/aprovacao-presencial/",
+    views.aprovar_orcamento_presencial,
+    name="aprovar_orcamento_presencial",
+    ),
 ]
