@@ -6,6 +6,18 @@ document.addEventListener('click', e => {
   if (el && !el.disabled && actions[el.dataset.action]) actions[el.dataset.action](el);
 });
 
+document.addEventListener('submit', e => {
+  const formulario = e.target.dataset.form;
+  const submitters = {
+    login: () => actions.login(),
+    'cliente-login': () => actions.loginCliente(),
+    'cliente-cadastro': () => actions.cadastrarCliente()
+  };
+  if (!Object.prototype.hasOwnProperty.call(submitters, formulario)) return;
+  e.preventDefault();
+  submitters[formulario]();
+});
+
 /* Campos: guardam o valor no estado sem redesenhar (o cursor não pula) */
 document.addEventListener('input', e => {
   const el = e.target, m = el.dataset.model, k = el.dataset.key;
@@ -31,5 +43,19 @@ document.addEventListener('keydown', e => {
 
 /* Selects que mudam outras partes da tela (ex.: horários livres) */
 document.addEventListener('change', e => {
-  if (e.target.dataset.rerender) { if (e.target.closest('[data-model="form"]') || e.target.dataset.model === 'form') state.formErr = ''; render(); }
+  const { model, key, rerender } = e.target.dataset;
+  if (model && key && e.target.tagName === 'SELECT') {
+    if (model === 'root') state[key] = e.target.value;
+    else state[model][key] = e.target.value;
+  }
+  if (rerender) {
+    if (model === 'form') state.formErr = '';
+    if ((model === 'form' || model === 'portal') && key === 'data') {
+      const horarios = horariosDisponiveis(e.target.value);
+      if (!horarios.includes(state[model].hora)) {
+        state[model].hora = horarios[0] || '';
+      }
+    }
+    render();
+  }
 });

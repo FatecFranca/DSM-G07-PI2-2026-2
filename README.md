@@ -94,7 +94,7 @@ TechManager_PI_2/
 1. **Clonar o Repositório:**
 
 ```
-git clone [suspicious link removed]
+git clone <link-do-repositório>
 cd TechManager_PI_2
 
 ```

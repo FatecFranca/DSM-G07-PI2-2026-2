@@ -1,7 +1,6 @@
 /* =================== Pedaços de HTML reutilizáveis ==================== */
 
 const pill = (txt, cls) => `<span class="pill ${cls}">${esc(txt)}</span>`;
-const badge = o => pill(o.status, STATUS_CLASS[o.status]);
 const opts = (list, val, labelFn = x => x) => list.map(v => `<option value="${esc(v)}"${v === val ? ' selected' : ''}>${esc(labelFn(v))}</option>`).join('');
 
 /* Campos ligados ao estado: data-model = objeto do state, data-key = campo */
@@ -14,7 +13,7 @@ const textarea = (id, label, model, key, ph) =>
 
 /* Lista dos próximos 5 agendamentos (painel e tela de nova OS) */
 function proximosList(clickable) {
-  const list = eventos().filter(e => !isClosed(e.o) && e.data >= TODAY)
+  const list = eventos().filter(e => e.data >= TODAY)
     .sort((a, b) => (a.data + a.hora).localeCompare(b.data + b.hora)).slice(0, 5);
   return list.map(e => {
     const o = e.o;
