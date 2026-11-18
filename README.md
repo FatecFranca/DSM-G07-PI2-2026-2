@@ -1,4 +1,4 @@
-```
+
 # 🛠️ TechManager — Sistema Web de Gestão de Assistência Técnica de TI
 
 &gt; **Projeto Integrador – 2º Semestre DSM (2026)**  
@@ -72,7 +72,7 @@ Devido à dependência diária dos usuários em relação aos seus equipamentos 
 
 ## 📂 Estrutura do Repositório
 
-```text
+````
 TechManager_PI_2/
 ├── docs/                                   # Artefatos da Engenharia de Software
 │   ├── documentacao_projeto_completa.docx  # Documentação técnica oficial (RUP/UML)
@@ -89,55 +89,56 @@ TechManager_PI_2/
 ├── Criando o Banco.sql                     # Script SQL DDL (MySQL)
 ├── .gitignore                              # Regras de exclusão do Git
 └── README.md                               # Apresentação do repositório
+````
 ### **Passo a Passo para Desenvolvimento Local**
 
 1. **Clonar o Repositório:**
 
-```
+
 git clone <link-do-repositório>
 cd TechManager_PI_2
 
-```
+
 
 2. **Acessar o diretório do backend:**
 
-```
+
 cd src/backend
 
-```
+
 
 3. **Criar e Ativar o Ambiente Virtual (** **venv** **):**
   * **Linux / macOS:**
 
-```
+
 python3 -m venv venv
 source venv/bin/activate
 
-```
+
 
 * **Windows (PowerShell):**
 
-```
+
 python -m venv venv
 .\venv\Scripts\Activate.ps1
 
-```
+
 
 4. **Instalar as Dependências:**
 
-```
+
 pip install --upgrade pip
 pip install -r requirements.txt
 
-```
+
 
 5. **Executar as Migrações e Iniciar o Servidor Local:**
 
-```
+
 python manage.py migrate
 python manage.py runserver
 
-```
+
 
 ---
 
@@ -162,6 +163,6 @@ O design de alta fidelidade com todas as telas navegáveis (fluxo do cliente, pa
 
 Desenvolvido para fins exclusivamente acadêmicos como Projeto Integrador do curso de Tecnologia em Desenvolvimento de Software Multiplataforma.
 
-```
+
 
 ---
